@@ -1,7 +1,7 @@
-(define-package "no-littering" "20240601.1254" "Help keeping ~/.config/emacs clean"
+(define-package "no-littering" "20240609.1455" "Help keeping ~/.config/emacs clean"
   '((emacs "25.1")
     (compat "29.1.4.2"))
-  :commit "4a71c736ecf04f9b8e5bdd10a73ef1febb73a557" :authors
+  :commit "046c8147896c0a0572668215508fd827bdb144ec" :authors
   '(("Jonas Bernoulli" . "emacs.no-littering@jonas.bernoulli.dev"))
   :maintainers
   '(("Jonas Bernoulli" . "emacs.no-littering@jonas.bernoulli.dev"))

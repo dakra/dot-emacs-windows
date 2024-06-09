@@ -19,7 +19,7 @@ Expand filename FILE relative to `no-littering-etc-directory'.
 Expand filename FILE relative to `no-littering-var-directory'.
 
 (fn FILE)")
-(register-definition-prefixes "no-littering" '("no-littering-"))
+(register-definition-prefixes "no-littering" '("emacs-session-filename" "no-littering-"))
 
 ;;; End of scraped data
 
