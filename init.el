@@ -18,6 +18,7 @@
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (package-initialize)
 
+(setq use-package-enable-imenu-support t)
 (require 'use-package)
 (if nil  ; Toggle init debug
     (setq use-package-verbose t
@@ -220,7 +221,8 @@
   :unless noninteractive
   :defer 1
   :config
-  (setq savehist-additional-variables '(compile-command kill-ring regexp-search-ring))
+  (setq savehist-additional-variables
+        '(compile-command kill-ring regexp-search-ring corfu-history))
   (savehist-mode))
 
 ;; So-long: Mitigating slowness due to extremely long lines
@@ -229,14 +231,27 @@
   :config
   (global-so-long-mode))
 
-(use-package shrink-whitespace
-  :bind ("M-SPC" . shrink-whitespace))
-
 (use-package compile
   :config
   (setq compilation-ask-about-save nil  ;; Always save before compiling
         compilation-always-kill t  ;; Kill old compile processes before starting a new one
         compilation-scroll-output t))  ;; Scroll with the compilation output
+
+(use-package eglot
+  :defer t
+  :config
+  (setq eglot-extend-to-xref t)
+  (setq eglot-autoshutdown t))
+
+(use-package eldoc
+  :hook (prog-mode . eldoc-mode)
+  :config
+  (setq eldoc-documentation-default 'eldoc-documentation-compose-eagerly)
+  (eldoc-add-command-completions "sp-")
+  (eldoc-add-command-completions "paredit-"))
+
+(use-package shrink-whitespace
+  :bind ("M-SPC" . shrink-whitespace))
 
 (use-package minions
   :unless noninteractive
@@ -277,7 +292,9 @@
   ;;       orderless-component-separator #'orderless-escapable-split-on-space)
   (setq completion-styles '(orderless basic)
         completion-category-defaults nil
-        completion-category-overrides '((file (styles partial-completion)))))
+        completion-category-overrides '((file (styles partial-completion))
+                                        (eglot (styles orderless))
+                                        (eglot-capf (styles orderless)))))
 
 ;; Enable rich annotations using the Marginalia package
 (use-package marginalia
@@ -384,6 +401,33 @@
   ;; auto-updating embark collect buffer
   :hook (embark-collect-mode . consult-preview-at-point-mode))
 
+(use-package corfu
+  :hook ((prog-mode . corfu-mode)
+         (eshell-mode . corfu-no-auto-mode))
+  :bind (:map corfu-map
+              ("RET" . nil))
+  :config
+  (defun corfu-no-auto-mode ()
+    "Activate corfu but with auto mode disabled."
+    (setq-local corfu-auto nil)
+    (corfu-mode))
+  
+  (setq corfu-cycle t
+        corfu-auto t
+        corfu-auto-delay 0.1
+        corfu-auto-prefix 2))
+
+(use-package corfu-history
+  :after corfu
+  :config
+  (corfu-history-mode))
+
+(use-package corfu-popupinfo
+  :after corfu
+  :config
+  (setq corfu-popupinfo-max-height 30)
+  (corfu-popupinfo-mode))
+
 (use-package wgrep
   :bind (:map grep-mode-map
               ("C-x C-q" . wgrep-change-to-wgrep-mode))
@@ -394,7 +438,13 @@
   (setq vundo-glyph-alist vundo-unicode-symbols))
 
 (use-package aggressive-indent
-  :hook ((emacs-lisp-mode lisp-mode hy-mode clojure-mode css js-mode) . aggressive-indent-mode))
+  :hook ((emacs-lisp-mode lisp-mode hy-mode clojure-mode css js-mode) . aggressive-indent-mode)
+  :config
+  (setq aggressive-indent-region-function
+        (lambda (start end)
+          "indent-region but without the annoying 'reporter' message."
+          (let ((inhibit-message t))
+            (indent-region start end)))))
 
 (use-package rainbow-delimiters
   :hook ((emacs-lisp-mode lisp-mode hy-mode clojure-mode cider-repl-mode sql-mode) . rainbow-delimiters-mode))
@@ -450,10 +500,12 @@
               ("M-r" . sp-splice-sexp-killing-around)
               ("M-(" . sp-wrap-round)
               ("C-)" . sp-forward-slurp-sexp) ;; barf/slurp
+              ("M-0" . sp-forward-slurp-sexp)
               ("C-<right>" . sp-forward-slurp-sexp)
               ("C-}" . sp-forward-barf-sexp)
               ("C-<left>" . sp-forward-barf-sexp)
               ("C-(" . sp-backward-slurp-sexp)
+              ("M-9" . sp-backward-slurp-sexp)
               ("C-M-<left>" . sp-backward-slurp-sexp)
               ("C-{" . sp-backward-barf-sexp)
               ("C-M-<right>" . sp-backward-barf-sexp)
@@ -685,6 +737,26 @@ created a dedicated process for the project."
   ;; Set remote.pushDefault
   (setq magit-remote-set-if-missing 'default)
 
+  ;; Don't override date for extend or reword
+  (setq magit-commit-extend-override-date nil)
+  (setq magit-commit-reword-override-date nil)
+
+  ;; Always show recent/unpushed/unpulled commits
+  (setq magit-section-initial-visibility-alist '((unpushed . show)
+                                                 (unpulled . show)))
+
+  ;; Show submodules section to magit status
+  (magit-add-section-hook 'magit-status-sections-hook
+                          'magit-insert-modules
+                          'magit-insert-stashes
+                          'append)
+
+  ;; Show ignored files section to magit status
+  (magit-add-section-hook 'magit-status-sections-hook
+                          'magit-insert-ignored-files
+                          'magit-insert-untracked-files
+                          nil)
+
   ;; When showing refs (In magit status press `y y') show only merged into master by default
   (setq magit-show-refs-arguments '("--merged=master"))
   ;; Show color and graph in magit-log. Since color makes it a bit slow, only show the last 128 commits
@@ -737,7 +809,7 @@ created a dedicated process for the project."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo vertico smartparens smart-region rainbow-delimiters org-modern orderless no-littering marginalia magit embark consult aggressive-indent)))
+   '(corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo vertico smartparens smart-region rainbow-delimiters org-modern orderless no-littering marginalia magit embark consult aggressive-indent)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
