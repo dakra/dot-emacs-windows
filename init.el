@@ -37,77 +37,114 @@
   ;; Put the auto-save and backup files in the var directory to the other data files
   (no-littering-theme-backups))
 
-;; Let's set some variables with basic user information.
-(setq user-full-name "Daniel Kraus"
-      user-mail-address "daniel@kraus.my")
 
-;; Always just use left-to-right text
-;; This makes Emacs a bit faster for very long lines
-(setq-default bidi-paragraph-direction 'left-to-right)
+(use-package emacs
+  :config
+  (add-to-list 'default-frame-alist '(font . "Fira Code-10:weight=regular:width=normal"))
+  (set-frame-font "Fira Code-10:weight=regular:width=normal" nil t)
 
-(setq-default indent-tabs-mode nil)  ;; Don't use tabs to indent
-(setq tab-always-indent 'complete)  ;; smart tab behavior - indent or complete
-(setq require-final-newline t)  ;; Newline at end of file
-(setq mouse-yank-at-point t)  ;; Paste with middle mouse button doesn't move the cursor
-(delete-selection-mode t)  ;; Delete the selection with a keypress
-(setq auth-source-save-behavior nil)  ;; Don't ask to store credentials in .authinfo.gpg
-(setq truncate-string-ellipsis "…")  ;; Use 'fancy' ellipses for truncated strings
+  (require-theme 'modus-themes) ; `require-theme' is ONLY for the built-in Modus themes
 
-;; Activate character folding in searches i.e. searching for 'a' matches 'ä' as well
-(setq search-default-mode 'char-fold-to-regexp)
+  ;; Add all your customizations prior to loading the themes
+  (setq modus-themes-italic-constructs t
+        modus-themes-bold-constructs nil)
 
-;; Only split horizontally if there are at least 90 chars column after splitting
-(setq split-width-threshold 180)
-;; Only split vertically on very tall screens
-(setq split-height-threshold 120)
+  ;; Load the theme of your choice.
+  (load-theme 'modus-vivendi)
 
-;; Paste with middle mouse button doesn't move the cursor
-(setq mouse-yank-at-point t)
+  (setq user-full-name "Daniel Kraus"
+        user-mail-address "daniel@kraus.my")
 
-;; Save whatever’s in the current (system) clipboard before
-;; replacing it with the Emacs’ text.
-(setq save-interprogram-paste-before-kill t)
+  ;; Always just use left-to-right text. This makes Emacs a bit faster for very long lines
+  (setq-default bidi-paragraph-direction 'left-to-right)
 
-;; Accept 'UTF-8' (uppercase) as a valid encoding in the coding header
-(define-coding-system-alias 'UTF-8 'utf-8)
+  (setq-default indent-tabs-mode nil)  ;; Don't use tabs to indent
+  (setq tab-always-indent 'complete)  ;; smart tab behavior - indent or complete
+  (setq require-final-newline t)  ;; Newline at end of file
+  (setq mouse-yank-at-point t)  ;; Paste with middle mouse button doesn't move the cursor
+  (delete-selection-mode t)  ;; Delete the selection with a keypress
+  (setq auth-source-save-behavior nil)  ;; Don't ask to store credentials in .authinfo.gpg
+  (setq truncate-string-ellipsis "…")  ;; Use 'fancy' ellipses for truncated strings
 
-;; Increase the limit to catch infinite recursions.
-;; Large scala files need sometimes more and this value can safely be increased.
-;;(setq max-lisp-eval-depth 32768)
+  ;; Activate character folding in searches i.e. searching for 'a' matches 'ä' as well
+  (setq search-default-mode 'char-fold-to-regexp)
 
-;; Increase the amount of data which Emacs reads from the process
-;; (Useful for LSP where the LSP responses are in the 800k - 3M range)
-(setq read-process-output-max (* 1024 1024)) ;; 1mb
+  ;; Only split horizontally if there are at least 90 chars column after splitting
+  (setq split-width-threshold 180)
+  ;; Only split vertically on very tall screens
+  (setq split-height-threshold 120)
 
-;; Allow some commands as safe by default
-;; allow horizontal scrolling with "M-x >"
-(put 'scroll-left 'disabled nil)
-;; enable narrowing commands
-(put 'narrow-to-region 'disabled nil)
-(put 'narrow-to-page 'disabled nil)
-(put 'narrow-to-defun 'disabled nil)
-;; enabled change region case commands
-(put 'upcase-region 'disabled nil)
-(put 'downcase-region 'disabled nil)
-;; enable erase-buffer command
-(put 'erase-buffer 'disabled nil)
+  ;; Save whatever’s in the current (system) clipboard before
+  ;; replacing it with the Emacs’ text.
+  (setq save-interprogram-paste-before-kill t)
 
-;; mode line settings
-(line-number-mode t)
-(column-number-mode t)
-(size-indication-mode t)
+  ;; Default to utf-8 encoding
+  (prefer-coding-system 'utf-8)
+  ;; Accept 'UTF-8' (uppercase) as a valid encoding in the coding header
+  (define-coding-system-alias 'UTF-8 'utf-8)
 
-;; Enable y/n answers
-(fset 'yes-or-no-p 'y-or-n-p)
+  ;; Increase the amount of data which Emacs reads from the process
+  ;; (Useful for LSP where the LSP responses are in the 800k - 3M range)
+  (setq read-process-output-max (* 1024 1024)) ;; 1mb
 
-;; highlight the current line
-(global-hl-line-mode +1)
+  ;; Allow some commands as safe by default
+  ;; allow horizontal scrolling with "M-x >"
+  (put 'scroll-left 'disabled nil)
+  ;; enable narrowing commands
+  (put 'narrow-to-region 'disabled nil)
+  (put 'narrow-to-page 'disabled nil)
+  (put 'narrow-to-defun 'disabled nil)
+  ;; enabled change region case commands
+  (put 'upcase-region 'disabled nil)
+  (put 'downcase-region 'disabled nil)
+  ;; enable erase-buffer command
+  (put 'erase-buffer 'disabled nil)
+
+  ;; Enable y/n answers
+  (fset 'yes-or-no-p 'y-or-n-p)
+
+  ;; Disable blinking cursor and the bell ring
+  (blink-cursor-mode -1)
+  (setq ring-bell-function 'ignore)
+
+  (setq create-lockfiles nil)  ; disable lock file symlinks
+
+  (setq make-backup-files t    ;; backup of a file the first time it is saved.
+        backup-by-copying t    ;; don't clobber symlinks
+        version-control t      ;; version numbers for backup files
+        delete-old-versions t  ;; delete excess backup files silently
+        kept-old-versions 6    ;; oldest versions to keep when a new numbered backup is made
+        kept-new-versions 9)   ;; newest versions to keep when a new numbered backup is made
+
+  ;; Add prompt indicator to `completing-read-multiple'.
+  ;; We display [CRM<separator>], e.g., [CRM,] if the separator is a comma.
+  (defun crm-indicator (args)
+    (cons (format "[CRM%s] %s"
+                  (replace-regexp-in-string
+                   "\\`\\[.*?]\\*\\|\\[.*?]\\*\\'" ""
+                   crm-separator)
+                  (car args))
+          (cdr args)))
+  (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
+
+  ;; Do not allow the cursor in the minibuffer prompt
+  (setq minibuffer-prompt-properties
+        '(read-only t cursor-intangible t face minibuffer-prompt))
+  (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
+
+  ;; Support opening new minibuffers from inside existing minibuffers.
+  (setq enable-recursive-minibuffers t)
+
+  ;; Hide commands in M-x which do not work in the current mode.  Vertico
+  ;; commands are hidden in normal buffers. This setting is useful beyond Vertico.
+  (setq read-extended-command-predicate #'command-completion-default-include-p))
 
 (use-package simple
   :bind (("C-/"   . undo-only)
          ("C-z"   . undo-only)
          ("C-S-z" . undo-redo)
          ("C-?"   . undo-redo)
+         ("C-a"   . move-beginning-of-line-or-indentation)
          ("C-x k" . kill-current-buffer)
          ("M-u"   . dakra-upcase-dwim)
          ("M-l"   . dakra-downcase-dwim)
@@ -115,6 +152,19 @@
   :hook (((mu4e-compose-mode markdown-mode rst-mode git-commit-setup) . text-mode-autofill-setup)
          ((visual-fill-column-mode markdown-mode) . word-wrap-whitespace-mode))
   :config
+  ;; mode line settings
+  (line-number-mode t)
+  (column-number-mode t)
+  (size-indication-mode t)
+
+  (defun move-beginning-of-line-or-indentation ()
+    "Move to beginning of line or indentation."
+    (interactive)
+    (let ((orig-point (point)))
+      (back-to-indentation)
+      (when (= orig-point (point))
+        (beginning-of-line))))
+
   ;; Hide commands in M-x which do not apply to the current mode.
   (setq read-extended-command-predicate #'command-completion-default-include-p)
 
@@ -143,44 +193,10 @@
   (dakra-define-up/downcase-dwim "downcase")
   (dakra-define-up/downcase-dwim "capitalize"))
 
-
-(use-package emacs
-  :config
-  (add-to-list 'default-frame-alist '(font . "Fira Code-10:weight=regular:width=normal"))
-  (set-frame-font "Fira Code-10:weight=regular:width=normal" nil t)
-
-  (require-theme 'modus-themes) ; `require-theme' is ONLY for the built-in Modus themes
-
-  ;; Add all your customizations prior to loading the themes
-  (setq modus-themes-italic-constructs t
-        modus-themes-bold-constructs nil)
-
-  ;; Load the theme of your choice.
-  (load-theme 'modus-vivendi)
-
-  ;; Add prompt indicator to `completing-read-multiple'.
-  ;; We display [CRM<separator>], e.g., [CRM,] if the separator is a comma.
-  (defun crm-indicator (args)
-    (cons (format "[CRM%s] %s"
-                  (replace-regexp-in-string
-                   "\\`\\[.*?]\\*\\|\\[.*?]\\*\\'" ""
-                   crm-separator)
-                  (car args))
-          (cdr args)))
-  (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
-
-  ;; Do not allow the cursor in the minibuffer prompt
-  (setq minibuffer-prompt-properties
-        '(read-only t cursor-intangible t face minibuffer-prompt))
-  (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
-
-  ;; Support opening new minibuffers from inside existing minibuffers.
-  (setq enable-recursive-minibuffers t)
-
-  ;; Hide commands in M-x which do not work in the current mode.  Vertico
-  ;; commands are hidden in normal buffers. This setting is useful beyond Vertico.
-  (setq read-extended-command-predicate #'command-completion-default-include-p)
-  )
+;; highlight the current line
+(use-package hl-line
+  :init
+  (global-hl-line-mode))
 
 (use-package abbrev
   :hook (text-mode . abbrev-mode)
@@ -215,6 +231,20 @@
 
 (use-package shrink-whitespace
   :bind ("M-SPC" . shrink-whitespace))
+
+(use-package compile
+  :config
+  (setq compilation-ask-about-save nil  ;; Always save before compiling
+        compilation-always-kill t  ;; Kill old compile processes before starting a new one
+        compilation-scroll-output t))  ;; Scroll with the compilation output
+
+(use-package minions
+  :unless noninteractive
+  :defer 2
+  :config
+  (setq minions-mode-line-lighter "+")
+  (setq minions-prominent-modes '(multiple-cursors-mode))
+  (minions-mode))
 
 (use-package vertico
   :demand t
@@ -353,6 +383,11 @@
   ;; if you want to have consult previews as you move around an
   ;; auto-updating embark collect buffer
   :hook (embark-collect-mode . consult-preview-at-point-mode))
+
+(use-package wgrep
+  :bind (:map grep-mode-map
+              ("C-x C-q" . wgrep-change-to-wgrep-mode))
+  :config (setq wgrep-auto-save-buffer t))
 
 (use-package vundo
   :config
@@ -702,7 +737,7 @@ created a dedicated process for the project."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo vertico smartparens smart-region rainbow-delimiters org-modern orderless no-littering marginalia magit embark consult aggressive-indent)))
+   '(minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo vertico smartparens smart-region rainbow-delimiters org-modern orderless no-littering marginalia magit embark consult aggressive-indent)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
