@@ -243,6 +243,15 @@
   (setq eglot-extend-to-xref t)
   (setq eglot-autoshutdown t))
 
+(use-package eglot-java
+  :after eglot
+  :config
+  (setq eglot-java-eclipse-jdt-cache-directory
+        (no-littering-expand-var-file-name "eglot/java/eglot-java-eclipse-jdt-cache"))
+  (setq eglot-java-server-install-dir (no-littering-expand-var-file-name "eglot/java/eclipse.jdt.ls"))
+  (setq eglot-java-junit-platform-console-standalone-jar
+        (no-littering-expand-var-file-name "eglot/java/junit-platform-console-standalone/junit-platform-console-standalone.jar")))
+
 (use-package eldoc
   :hook (prog-mode . eldoc-mode)
   :config
@@ -776,6 +785,25 @@ created a dedicated process for the project."
 (use-package ssh-agency
   :after magit)
 
+(use-package browse-at-remote
+  :bind (("C-c G" . dakra-browse-at-remote))
+  :config
+  (defun dakra-browse-at-remote (p)
+    "Like browse-at-remote but will also copy the url in the kill ring.
+When called with one prefix argument only copy the url in the kill ring
+and don't open in the browser.
+When called with 2 prefix arguments only open in browser and don't copy."
+    (interactive "p")
+    (cl-case p
+      (4  (browse-at-remote-kill))
+      (16 (browse-at-remote))
+      (t  (browse-at-remote-kill) (browse-at-remote))))
+
+  (add-to-list 'browse-at-remote-remote-type-regexps '(:host "^git\\.enbw\\.net\\'" :type "gitea"))
+  (add-to-list 'browse-at-remote-remote-type-regexps '(:host ".*gitlab.*"           :type "gitlab"))
+
+  (setq browse-at-remote-prefer-symbolic nil))
+
 (use-package treemacs
   :bind (([f8]        . treemacs-toggle-or-select)
          :map treemacs-mode-map
@@ -869,7 +897,7 @@ With two `C-u' `C-u' prefix args, add and display current project."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo vertico smartparens smart-region rainbow-delimiters org-modern orderless no-littering marginalia magit embark consult aggressive-indent)))
+   '(browse-at-remote eglot-java treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo vertico smartparens smart-region rainbow-delimiters org-modern orderless no-littering marginalia magit embark consult aggressive-indent)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
