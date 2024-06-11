@@ -442,7 +442,7 @@
   :config
   (setq aggressive-indent-region-function
         (lambda (start end)
-          "indent-region but without the annoying 'reporter' message."
+          "indent-region but without the annoying =reporter= message."
           (let ((inhibit-message t))
             (indent-region start end)))))
 
@@ -776,6 +776,66 @@ created a dedicated process for the project."
 (use-package ssh-agency
   :after magit)
 
+(use-package treemacs
+  :bind (([f8]        . treemacs-toggle-or-select)
+         :map treemacs-mode-map
+         ("C-t a" . treemacs-add-project-to-workspace)
+         ("C-t d" . treemacs-remove-project)
+         ("C-t r" . treemacs-rename-project)
+         ;; If we only hide the treemacs buffer (default binding) then, when we switch
+         ;; a frame to a different project and toggle treemacs again we still get the old project
+         ("q" . treemacs-kill-buffer))
+  :config
+  (defun treemacs-toggle-or-select (&optional arg)
+    "Initialize or toggle treemacs.
+- If the treemacs window is visible and selected, hide it.
+- If the treemacs window is visible select it with cursor on current file.
+- If a treemacs buffer exists, but is not visible show it.
+- If no treemacs buffer exists for the current frame create and show it.
+- If the workspace is empty additionally ask for the root path of the first
+  project to add.
+
+With one `C-u' prefix argument, display current project exclusively.
+With two `C-u' `C-u' prefix args, add and display current project."
+    (interactive "p")
+    (cond ((or (not arg) (eq arg 1))
+           (pcase (treemacs-current-visibility)
+             ('visible (if (string-prefix-p treemacs--buffer-name-prefix (buffer-name))
+                           (delete-window (treemacs-get-local-window))
+                         (when (buffer-file-name)
+                           (treemacs-find-file))
+                         (treemacs--select-visible-window)))
+             ('exists  (treemacs-select-window))
+             ('none    (treemacs--init))))
+          ((eq arg 4) (treemacs-add-and-display-current-project-exclusively))
+          ((eq arg 16) (treemacs-add-and-display-current-project))))
+
+  (defun treemacs-ignore-python-files (file _)
+    (or (s-ends-with-p ".pyc" file)
+        (string= file "__pycache__")))
+  (add-to-list 'treemacs-ignored-file-predicates 'treemacs-ignore-python-files)
+
+  ;; Read input from minibuffer instead of childframe (which requires an extra package)
+  (setq treemacs-read-string-input 'from-minibuffer)
+
+  (setq treemacs-follow-after-init          t
+        treemacs-indentation                1
+        treemacs-width                      30
+        treemacs-collapse-dirs              5
+        treemacs-silent-refresh             nil
+        treemacs-is-never-other-window      t)
+  (treemacs-filewatch-mode t)
+  (treemacs-follow-mode -1)
+  (treemacs-git-mode 'simple))
+
+;; Use magit hooks to notify treemacs of git changes
+(use-package treemacs-magit
+  :after treemacs)
+
+(use-package treemacs-icons-dired
+  :after dired
+  :config (treemacs-icons-dired-mode))
+
 (use-package elisp-mode
   :bind (:map emacs-lisp-mode-map
               ("C-c C-c" . eval-defun)
@@ -809,7 +869,7 @@ created a dedicated process for the project."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo vertico smartparens smart-region rainbow-delimiters org-modern orderless no-littering marginalia magit embark consult aggressive-indent)))
+   '(treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo vertico smartparens smart-region rainbow-delimiters org-modern orderless no-littering marginalia magit embark consult aggressive-indent)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
