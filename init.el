@@ -732,13 +732,13 @@ created a dedicated process for the project."
   :bind (("C-x g" . magit-status)
          ("C-x G" . magit-dispatch)
          ("C-x M-g" . magit-dispatch)
-         ("s-m p" . magit-list-repositories)
-         ("s-m m" . magit-status)
-         ("s-m f" . magit-file-dispatch)
-         ("s-m l" . magit-log)
-         ("s-m L" . magit-log-buffer-file)
-         ("s-m b" . magit-blame-addition)
-         ("s-m B" . magit-blame)
+         ("C-x C-m C-p" . magit-list-repositories)
+         ("C-x C-m C-m" . magit-status)
+         ("C-x C-m C-f" . magit-file-dispatch)
+         ("C-x C-m C-l" . magit-log)
+         ("C-x C-m C-L" . magit-log-buffer-file)
+         ("C-x C-m C-b" . magit-blame-addition)
+         ("C-x C-m C-B" . magit-blame)
          :map magit-process-mode-map
          ("k" . magit-process-kill))
   :hook (after-save . magit-after-save-refresh-status)
@@ -784,6 +784,15 @@ created a dedicated process for the project."
 
 (use-package ssh-agency
   :after magit)
+
+(use-package diff-hl
+  :hook (((prog-mode conf-mode vc-dir-mode ledger-mode) . turn-on-diff-hl-mode)
+         (magit-pre-refresh  . diff-hl-magit-pre-refresh)
+         (magit-post-refresh . diff-hl-magit-post-refresh))
+  :config
+  ;; Disable diff-hl in Tramp
+  (setq diff-hl-disable-on-remote t)
+  (setq diff-hl-draw-borders nil))
 
 (use-package browse-at-remote
   :bind (("C-c G" . dakra-browse-at-remote))
@@ -897,7 +906,7 @@ With two `C-u' `C-u' prefix args, add and display current project."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(browse-at-remote eglot-java treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo vertico smartparens smart-region rainbow-delimiters org-modern orderless no-littering marginalia magit embark consult aggressive-indent)))
+   '(diff-hl browse-at-remote eglot-java treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo vertico smartparens smart-region rainbow-delimiters org-modern orderless no-littering marginalia magit embark consult aggressive-indent)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
