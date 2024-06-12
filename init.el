@@ -44,14 +44,14 @@
   (add-to-list 'default-frame-alist '(font . "Fira Code-10:weight=regular:width=normal"))
   (set-frame-font "Fira Code-10:weight=regular:width=normal" nil t)
 
-  (require-theme 'modus-themes) ; `require-theme' is ONLY for the built-in Modus themes
+  ;; (require-theme 'modus-themes) ; `require-theme' is ONLY for the built-in Modus themes
 
   ;; Add all your customizations prior to loading the themes
-  (setq modus-themes-italic-constructs t
-        modus-themes-bold-constructs nil)
+  ;; (setq modus-themes-italic-constructs t
+  ;;       modus-themes-bold-constructs nil)
 
   ;; Load the theme of your choice.
-  (load-theme 'modus-vivendi)
+  ;; (load-theme 'modus-vivendi)
 
   (setq user-full-name "Daniel Kraus"
         user-mail-address "daniel@kraus.my")
@@ -66,6 +66,10 @@
   (delete-selection-mode t)  ;; Delete the selection with a keypress
   (setq auth-source-save-behavior nil)  ;; Don't ask to store credentials in .authinfo.gpg
   (setq truncate-string-ellipsis "…")  ;; Use 'fancy' ellipses for truncated strings
+
+  ;; Focus follows mouse for Emacs windows and frames
+  (setq mouse-autoselect-window t)
+  (setq focus-follows-mouse t)
 
   ;; Activate character folding in searches i.e. searching for 'a' matches 'ä' as well
   (setq search-default-mode 'char-fold-to-regexp)
@@ -194,6 +198,9 @@
   (dakra-define-up/downcase-dwim "downcase")
   (dakra-define-up/downcase-dwim "capitalize"))
 
+(use-package moe-theme
+  :config (load-theme 'moe-dark t))
+
 ;; highlight the current line
 (use-package hl-line
   :init
@@ -224,6 +231,24 @@
   (setq savehist-additional-variables
         '(compile-command kill-ring regexp-search-ring corfu-history))
   (savehist-mode))
+
+(use-package windmove
+  :bind (("s-i" . windmove-up)
+         ("s-k" . windmove-down)
+         ("s-j" . windmove-left)
+         ("s-l" . windmove-right)
+         ("s-J" . windmove-swap-states-left)
+         ("s-K" . windmove-swap-states-down)
+         ("s-I" . windmove-swap-states-up)
+         ("s-L" . windmove-swap-states-right)
+         ("C-M-i" . windmove-up)
+         ("C-M-k" . windmove-down)
+         ("C-M-j" . windmove-left)
+         ("C-M-l" . windmove-right)
+         ("C-M-S-j" . windmove-swap-states-left)
+         ("C-M-S-k" . windmove-swap-states-down)
+         ("C-M-S-i" . windmove-swap-states-up)
+         ("C-M-S-l" . windmove-swap-states-right)))
 
 ;; So-long: Mitigating slowness due to extremely long lines
 (use-package so-long
@@ -525,6 +550,10 @@
   (setq sp-base-key-bindings 'paredit)
   (setq sp-autoskip-closing-pair 'always)
 
+  ;; Always highlight matching parens
+  (show-smartparens-global-mode)
+  (setq blink-matching-paren nil)  ;; Don't blink matching parens
+
   (defun whole-line-or-region-sp-kill-region (prefix)
     "Call `sp-kill-region' on region or PREFIX whole lines."
     (interactive "*p")
@@ -794,24 +823,11 @@ created a dedicated process for the project."
   (setq diff-hl-disable-on-remote t)
   (setq diff-hl-draw-borders nil))
 
-(use-package browse-at-remote
-  :bind (("C-c G" . dakra-browse-at-remote))
+(use-package git-link
+  :bind (("C-c G" . git-link))
   :config
-  (defun dakra-browse-at-remote (p)
-    "Like browse-at-remote but will also copy the url in the kill ring.
-When called with one prefix argument only copy the url in the kill ring
-and don't open in the browser.
-When called with 2 prefix arguments only open in browser and don't copy."
-    (interactive "p")
-    (cl-case p
-      (4  (browse-at-remote-kill))
-      (16 (browse-at-remote))
-      (t  (browse-at-remote-kill) (browse-at-remote))))
-
-  (add-to-list 'browse-at-remote-remote-type-regexps '(:host "^git\\.enbw\\.net\\'" :type "gitea"))
-  (add-to-list 'browse-at-remote-remote-type-regexps '(:host ".*gitlab.*"           :type "gitlab"))
-
-  (setq browse-at-remote-prefer-symbolic nil))
+  (add-to-list 'git-link-remote-alist '("git\\.enbw\\.net" git-link-codeberg))
+  (setq git-link-use-commit t))
 
 (use-package treemacs
   :bind (([f8]        . treemacs-toggle-or-select)
@@ -906,7 +922,7 @@ With two `C-u' `C-u' prefix args, add and display current project."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(diff-hl browse-at-remote eglot-java treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo vertico smartparens smart-region rainbow-delimiters org-modern orderless no-littering marginalia magit embark consult aggressive-indent)))
+   '(git-link eglot moe-theme diff-hl eglot-java treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo vertico multiple-cursors smartparens smart-region rainbow-delimiters org-modern orderless no-littering marginalia magit embark consult aggressive-indent)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
