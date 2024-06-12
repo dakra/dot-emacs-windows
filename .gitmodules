@@ -1,0 +1,3 @@
+[submodule "moe-theme"]
+	path = lib/moe-theme
+	url = https://github.com/dakra/moe-theme.el.git
