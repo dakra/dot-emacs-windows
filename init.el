@@ -199,6 +199,7 @@
   (dakra-define-up/downcase-dwim "capitalize"))
 
 (use-package moe-theme
+  :load-path "lib/moe-theme"  ;; Symlinks are difficult in Windows environments without admin access
   :config (load-theme 'moe-dark t))
 
 ;; highlight the current line
