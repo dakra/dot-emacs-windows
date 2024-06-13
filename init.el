@@ -43,6 +43,7 @@
   :config
   (add-to-list 'default-frame-alist '(font . "Fira Code-10:weight=regular:width=normal"))
   (set-frame-font "Fira Code-10:weight=regular:width=normal" nil t)
+  (set-fontset-font t 'emoji (font-spec :family "Segoe UI Emoji") nil 'append)
 
   ;; (require-theme 'modus-themes) ; `require-theme' is ONLY for the built-in Modus themes
 
@@ -60,6 +61,7 @@
   (setq-default bidi-paragraph-direction 'left-to-right)
 
   (setq-default indent-tabs-mode nil)  ;; Don't use tabs to indent
+  (setq-default tab-width 4)
   (setq tab-always-indent 'complete)  ;; smart tab behavior - indent or complete
   (setq require-final-newline t)  ;; Newline at end of file
   (setq mouse-yank-at-point t)  ;; Paste with middle mouse button doesn't move the cursor
@@ -472,6 +474,17 @@
   :config
   (setq vundo-glyph-alist vundo-unicode-symbols))
 
+(use-package ligature
+  :hook (prog-mode . ligature-mode)
+  :config
+  ;; Some ligatures supported by most fonts. E.g. Fira Code, Victor Mono
+  (ligature-set-ligatures 'prog-mode '("~~>" "##" "|-" "-|" "|->" "|=" ">-" "<-" "<--" "->"
+                                       "-->" "-<" ">->" ">>-" "<<-" "<->" "->>" "-<<" "<-<"
+                                       "==>" "=>" "=/=" "!==" "!=" "<==" ">>=" "=>>" ">=>"
+                                       "<=>" "<=<" "=<=" "=>=" "<<=" "=<<"
+                                       "=:=" "=!=" "==" "=~" "!~" "===" "::" ":=" ":>" ">:"
+                                       ";;" "__" "..." ".." "&&" "++")))
+
 (use-package aggressive-indent
   :hook ((emacs-lisp-mode lisp-mode hy-mode clojure-mode css js-mode) . aggressive-indent-mode)
   :config
@@ -668,13 +681,14 @@
 (use-package project
   :bind-keymap (("s-p"   . project-prefix-map)  ; projectile-command-map
                 ("C-c p" . project-prefix-map))
-  :bind (:map project-prefix-map
-              ("SPC" . consult-project-extra-find)
-              ("d"   . project-dired)
-              ("D"   . project-edit-deps-edn)
-              ("s"   . consult-ripgrep)
-              ("E"   . project-edit-dir-locals)
-              ("P"   . project-run-python))
+  :bind (("C-x SPC" . consult-project-extra-find)
+         :map project-prefix-map
+         ("SPC" . consult-project-extra-find)
+         ("d"   . project-dired)
+         ("D"   . project-edit-deps-edn)
+         ("s"   . consult-ripgrep)
+         ("E"   . project-edit-dir-locals)
+         ("P"   . project-run-python))
   :config
   ;; Ignore clj-kondo and cljs-runtime folder by default
   (setq project-vc-ignores '(".clj-kondo/" "cljs-runtime/"))
@@ -828,7 +842,8 @@ created a dedicated process for the project."
   :bind (("C-c G" . git-link))
   :config
   (add-to-list 'git-link-remote-alist '("git\\.enbw\\.net" git-link-codeberg))
-  (setq git-link-use-commit t))
+  (setq git-link-use-commit t
+        git-link-open-in-browser t))
 
 (use-package treemacs
   :bind (([f8]        . treemacs-toggle-or-select)
@@ -923,7 +938,7 @@ With two `C-u' `C-u' prefix args, add and display current project."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(git-link eglot moe-theme diff-hl eglot-java treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo vertico multiple-cursors smartparens smart-region rainbow-delimiters org-modern orderless no-littering marginalia magit embark consult aggressive-indent)))
+   '(ligature moe-theme eglot-java treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo vertico smartparens smart-region rainbow-delimiters org-modern orderless no-littering marginalia magit embark consult aggressive-indent)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
