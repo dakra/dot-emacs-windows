@@ -761,6 +761,53 @@ created a dedicated process for the project."
 ;;  '((right-divider-width . 2)
 ;;    (internal-border-width . 0)))
 
+(use-package tempel
+  :bind (("\C-c TAB" . tempel-complete)
+         :map tempel-map
+         ([tab] . tempel-next)
+         ([backtab] . tempel-previous))
+  :hook ((text-mode prog-mode) . tempel-setup-capf)
+  :config
+  ;; Load templates from etc folder
+  (setq tempel-path (no-littering-expand-etc-file-name "tempel.eld"))
+
+  ;; Don't auto reload templates.
+  ;; `(setq tempel--path-templates nil)' if you want to force a reload.
+  (setq tempel-auto-reload nil)
+
+  ;; Setup completion at point
+  (defun tempel-setup-capf ()
+    ;; Add the Tempel Capf to `completion-at-point-functions'.
+    ;; `tempel-expand' only triggers on exact matches. Alternatively use
+    ;; `tempel-complete' if you want to see all matches, but then you
+    ;; should also configure `tempel-trigger-prefix', such that Tempel
+    ;; does not trigger too often when you don't expect it. NOTE: We add
+    ;; `tempel-expand' *before* the main programming mode Capf, such
+    ;; that it will be tried first.
+    (setq-local completion-at-point-functions
+                (cons #'tempel-expand
+                      completion-at-point-functions))))
+
+(use-package markdown-mode
+  :mode (("\\.markdown\\'" . gfm-mode)
+         ("README\\.md\\'" . gfm-mode))
+  :bind (:map markdown-mode-map
+              ("C-c =" . markdown-insert-header-dwim))
+  :config
+  ;; Display remote images
+  (setq markdown-display-remote-images t)
+  ;; Enable fontification for code blocks
+  (setq markdown-fontify-code-blocks-natively t)
+  ;; Add some more languages
+  (dolist (x '(("ini" . conf-mode)
+               ("clj" . clojure-mode)
+               ("cljs" . clojure-mode)
+               ("cljc" . clojure-mode)))
+    (add-to-list 'markdown-code-lang-modes x))
+
+  ;; use pandoc with source code syntax highlighting to preview markdown (C-c C-c p)
+  (setq markdown-command "pandoc -s --highlight-style pygments -f markdown_github -t html5"))
+
 (use-package with-editor
   ;; Use local Emacs instance as $EDITOR (e.g. in `git commit' or `crontab -e')
   :hook ((shell-mode eshell-mode vterm-mode term-exec) . with-editor-export-editor))
@@ -930,7 +977,11 @@ With two `C-u' `C-u' prefix args, add and display current project."
           (insert eval-print-as-comment-prefix))))))
 
 (use-package kubel
-  :defer t)
+  :bind ((:map kubel-mode-map
+               ("N" . kubel-set-namespace)
+               ("P" . kubel-port-forward-pod)
+               ("n" . next-line)
+               ("p" . previous-line))))
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -938,7 +989,7 @@ With two `C-u' `C-u' prefix args, add and display current project."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(ligature moe-theme eglot-java treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo vertico smartparens smart-region rainbow-delimiters org-modern orderless no-littering marginalia magit embark consult aggressive-indent)))
+   '(markdown-mode tempel ligature moe-theme eglot-java treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo vertico smartparens smart-region rainbow-delimiters org-modern orderless no-littering marginalia magit embark consult aggressive-indent)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

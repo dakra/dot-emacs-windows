@@ -556,7 +556,7 @@ TYPE is containers or initContainers."
   (unless type (setq type "containers"))
   (split-string
    (kubel--exec-to-string
-    (format "%s get pod %s -o jsonpath='{.spec.%s[*].name}'" (kubel--get-command-prefix) pod-name type)) " "))
+    (format "%s get pod %s -o jsonpath=\"{.spec.%s[*].name}\"" (kubel--get-command-prefix) pod-name type)) " "))
 
 (defun kubel--get-pod-labels ()
   "List labels of pods in a current namespace."
@@ -567,7 +567,7 @@ TYPE is containers or initContainers."
             (replace-regexp-in-string
              "map\\[\\(.+?\\)\\]" "\\1"
              (kubel--exec-to-string
-              (format "%s get pod -o jsonpath='{.items[*].metadata.labels}'" (kubel--get-command-prefix)))))))
+              (format "%s get pod -o jsonpath=\"{.items[*].metadata.labels}\"" (kubel--get-command-prefix)))))))
          (splitted (mapcan (lambda (s) (split-string s ","))
                            raw-labels))
          (cleaned (mapcar (lambda (s) (replace-regexp-in-string "[{|\"|}]" "" s)) splitted))
@@ -578,7 +578,7 @@ TYPE is containers or initContainers."
   "Prompt user to select an instance out of a list of resources.
 
 NAME is the string name of the resource."
-  (let ((cmd (format "%s get %s -o=jsonpath='{.items[*].metadata.name}'"
+  (let ((cmd (format "%s get %s -o=jsonpath=\"{.items[*].metadata.name}\""
                      (kubel--get-command-prefix) name)))
     (completing-read (concat (s-upper-camel-case name) ": ")
                      (split-string (kubel--exec-to-string cmd) " "))))
@@ -793,7 +793,7 @@ ARGS is the arguments list from transient."
   (unless kubel--namespace-list-cached
     (setq kubel--namespace-list-cached
           (split-string (kubel--exec-to-string
-                         (format "%s --context %s get namespace -o jsonpath='{.items[*].metadata.name}'" kubel-kubectl kubel-context)) " ")))
+                         (format "%s --context %s get namespace -o jsonpath=\"{.items[*].metadata.name}\"" kubel-kubectl kubel-context)) " ")))
   kubel--namespace-list-cached)
 
 (defun kubel--list-namespace ()
@@ -830,7 +830,7 @@ ARGS is the arguments list from transient."
       (setq kubel-context
             (completing-read
              "Select context: "
-             (split-string (kubel--exec-to-string (format "%s config view -o jsonpath='{.contexts[*].name}'" kubel-kubectl)) " ")))
+             (split-string (kubel--exec-to-string (format "%s config view -o jsonpath=\"{.contexts[*].name}\"" kubel-kubectl)) " ")))
       (kubel--invalidate-context-caches)
       (setq kubel-namespace "default")
       (switch-to-buffer (current-buffer))
