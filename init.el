@@ -38,9 +38,11 @@
   ;; Put the auto-save and backup files in the var directory to the other data files
   (no-littering-theme-backups))
 
-
 (use-package emacs
   :config
+  ;; Compile loaded .elc files asynchronously
+  (setq native-comp-jit-compilation t)
+
   (add-to-list 'default-frame-alist '(font . "Fira Code-10:weight=regular:width=normal"))
   (set-frame-font "Fira Code-10:weight=regular:width=normal" nil t)
   (set-fontset-font t 'emoji (font-spec :family "Segoe UI Emoji") nil 'append)
@@ -645,6 +647,33 @@
   :bind (:map hs-minor-mode-map
               ([C-tab] . hs-toggle-hiding)))
 
+(use-package avy
+  :bind ("C-;" . avy-goto-char-timer)
+  :config
+  (setq avy-background t)
+  (setq avy-style 'at-full)
+  (setq avy-timeout-seconds 0.2))
+
+(use-package gumshoe
+  :defer 1
+  :bind (("C-x SPC" . gumshoe-backtrack)
+         ("C-x C-SPC" . gumshoe-buf-backtrack)
+         ("C-x M-SPC" . global-gumshoe-backtracking-mode-forward)
+         :map global-gumshoe-backtracking-mode-map
+         ("n" . global-gumshoe-backtracking-mode-back)
+         ("p" . global-gumshoe-backtracking-mode-forward)
+         ("SPC" . global-gumshoe-backtracking-mode-back)
+         ("C-SPC" . global-gumshoe-backtracking-mode-forward))
+  :config
+  (global-gumshoe-mode))
+
+(use-package proced
+  :bind ("C-x p" . proced)
+  :config
+  (setq-default proced-filter 'all)
+  (setq proced-format 'medium)
+  (setq proced-tree-flag t))
+
 (use-package dired
   :bind (("C-x d" . dired)
          :map dired-mode-map
@@ -989,7 +1018,7 @@ With two `C-u' `C-u' prefix args, add and display current project."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(markdown-mode tempel ligature moe-theme eglot-java treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo vertico smartparens smart-region rainbow-delimiters org-modern orderless no-littering marginalia magit embark consult aggressive-indent)))
+   '(diff-hl git-link avy gumshoe markdown-mode tempel ligature moe-theme eglot-java treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo vertico smartparens smart-region rainbow-delimiters org-modern orderless no-littering marginalia magit embark consult aggressive-indent)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
