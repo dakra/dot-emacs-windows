@@ -665,6 +665,7 @@
          ("SPC" . global-gumshoe-backtracking-mode-back)
          ("C-SPC" . global-gumshoe-backtracking-mode-forward))
   :config
+  (setq gumshoe-prefer-same-window t)
   (global-gumshoe-mode))
 
 (use-package proced
@@ -750,19 +751,44 @@ created a dedicated process for the project."
   (setq project-switch-commands #'consult-project-extra-find))
 
 (use-package org
-  :defer t
+  :bind (:map org-mode-map
+              ("<M-return>" . org-insert-todo-heading-respect-content)
+              ("<M-S-return>" . org-meta-return)
+              ("M-." . org-open-at-point)  ; So M-. behaves like in source code.
+              ("M-," . org-mark-ring-goto)
+              ("M-;" . org-comment-dwim)
+              ("M-i" . consult-org-heading)
+              ;; Disable adding and removing org-agenda files via keybinding.
+              ("C-c [" . nil)
+              ("C-c ]" . nil)
+              ("\C-c TAB" . nil)  ;; Remove for tempel-expand
+              ("C-a" . org-beginning-of-line)
+              ("M-p" . org-previous-visible-heading)
+              ("M-n" . org-next-visible-heading)
+              ("<M-up>" . org-metaup)
+              ("<M-down>" . org-metadown)
+              :map org-src-mode-map
+              ("C-x n" . org-edit-src-exit))
   :config
   (setq org-auto-align-tags nil
         org-tags-column 0
         org-fold-catch-invisible-edits 'show-and-error
         org-special-ctrl-a/e t
         org-insert-heading-respect-content t
-
+        org-startup-with-inline-images t
+        org-imenu-depth 5
+        org-special-ctrl-a/e t
+        org-special-ctrl-k t
+        org-startup-indented nil  ;; Doesn't play nice with org-modern
         ;; Org styling, hide markup etc.
         org-hide-emphasis-markers t
         org-pretty-entities t
         ;; Ellipsis styling
-        org-ellipsis "…")
+        org-ellipsis "…"
+        ;; But Don't print "bar" as subscript in "foo_bar"
+        org-pretty-entities-include-sub-superscripts nil
+        ;; And also don't display ^ or _ as super/subscripts
+        org-use-sub-superscripts nil)
   (set-face-attribute 'org-ellipsis nil :inherit 'default :box nil))
 
 (use-package org-agenda
@@ -778,6 +804,81 @@ created a dedicated process for the project."
         org-agenda-current-time-string
         "◀── now ─────────────────────────────────────────────────"))
 
+(use-package ob
+  :after org
+  :hook ((org-babel-after-execute . org-display-inline-images))
+  :config
+  ;; don't prompt me to confirm every time I want to evaluate a block
+  (setq org-confirm-babel-evaluate nil)
+
+  ;; Add more languages to org-babel
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((C . t)
+     (awk)
+     (calc . t)
+     (clojure . t)
+     (css)
+     (ditaa . t)
+     (dot . t)
+     (emacs-lisp . t)
+     (gnuplot . t)
+     (haskell)
+     (java . t)
+     (js . t)
+     (latex)
+     (lisp)
+     (lua . t)
+     (matlab)
+     (ocaml)
+     (octave . t)
+     (perl)
+     (plantuml . t)
+     (python . t)
+     (restclient . t)
+     (ruby)
+     (sass)
+     (scala)
+     (scheme)
+     (shell . t)
+     (sql . t)
+     (sqlite . t))))
+
+(use-package ob-restclient
+  :after ob)
+
+(use-package org-src
+  :after org
+  :config
+  ;; Always split babel source window below.
+  ;; Alternative is `current-window' to don't mess with window layout at all
+  (setq org-src-window-setup 'split-window-below)
+
+  (setq org-edit-src-content-indentation 0)
+
+  ;; Add 'conf-mode' to org-babel
+  (add-to-list 'org-src-lang-modes '("ini" . conf))
+  (add-to-list 'org-src-lang-modes '("conf" . conf)))
+
+(use-package ol
+  :after org
+  :config
+  (setq org-link-keep-stored-after-insertion t))
+
+;; org-link support for magit buffers
+(use-package orgit
+  ;; Automatically copy orgit link to last commit after commit
+  :hook (git-commit-post-finish . orgit-store-after-commit)
+  :config
+  (defun orgit-store-after-commit ()
+    "Store orgit-link for latest commit after commit message editor is finished."
+    (let* ((repo (abbreviate-file-name default-directory))
+           (rev (magit-git-string "rev-parse" "HEAD"))
+           (link (format "orgit-rev:%s::%s" repo rev))
+           (summary (substring-no-properties (magit-format-rev-summary rev)))
+           (desc (format "%s (%s)" summary repo)))
+      (push (list link desc) org-stored-links))))
+
 (use-package org-modern
   :hook ((org-mode . org-modern-mode)
          (org-agenda-finalize . org-modern-agenda))
@@ -786,9 +887,10 @@ created a dedicated process for the project."
         org-modern-star 'replace
         org-modern-replace-stars "❶❷❸❹❺❻❼"))
 
-;; (modify-all-frames-parameters
-;;  '((right-divider-width . 2)
-;;    (internal-border-width . 0)))
+(use-package org-appear
+  :hook (org-mode . org-appear-mode)
+  :config
+  (setq org-appear-autolinks nil))
 
 (use-package tempel
   :bind (("\C-c TAB" . tempel-complete)
@@ -981,6 +1083,17 @@ With two `C-u' `C-u' prefix args, add and display current project."
   :after dired
   :config (treemacs-icons-dired-mode))
 
+(use-package restclient
+  :mode ("\\.rest\\'" . restclient-mode)
+  :hook (restclient-mode . restclient-outline-mode)
+  :config
+  ;; Open application/edn responses in clojure mode
+  (add-to-list 'restclient-content-type-modes '("application/edn" . clojure-mode))
+
+  (defun restclient-outline-mode ()
+    (outline-minor-mode)
+    (setq-local outline-regexp "##+")))
+
 (use-package elisp-mode
   :bind (:map emacs-lisp-mode-map
               ("C-c C-c" . eval-defun)
@@ -1018,7 +1131,7 @@ With two `C-u' `C-u' prefix args, add and display current project."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(diff-hl git-link avy gumshoe markdown-mode tempel ligature moe-theme eglot-java treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo vertico smartparens smart-region rainbow-delimiters org-modern orderless no-littering marginalia magit embark consult aggressive-indent)))
+   '(multiple-cursors ob-restclient restclient orgit org-appear diff-hl git-link avy gumshoe markdown-mode tempel ligature moe-theme eglot-java treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo vertico smartparens smart-region rainbow-delimiters org-modern orderless no-littering marginalia magit embark consult aggressive-indent)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
