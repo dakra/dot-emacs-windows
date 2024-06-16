@@ -41,7 +41,11 @@
 (use-package emacs
   :config
   ;; Compile loaded .elc files asynchronously
-  (setq native-comp-jit-compilation t)
+  (setq native-comp-jit-compilation t
+        native-comp-async-jobs-number 4)
+
+  ;; NOTE: To compile eln files you first have to byte-compile them with something like:
+  ;; (byte-recompile-directory (expand-file-name "~/.emacs.d") 0)
 
   (add-to-list 'default-frame-alist '(font . "Fira Code-10:weight=regular:width=normal"))
   (set-frame-font "Fira Code-10:weight=regular:width=normal" nil t)
@@ -58,6 +62,14 @@
 
   (setq user-full-name "Daniel Kraus"
         user-mail-address "daniel@kraus.my")
+
+  ;; Register all left windows-key presses as "super".
+  ;; Doesn't work for "s-l" as this always locks Windows on a low level.
+  (when (eq system-type 'windows-nt)
+    (setq w32-lwindow-modifier 'super
+          w32-pass-lwindow-to-system nil
+          w32-pass-alt-to-system nil)
+    (w32-register-hot-key [s-]))
 
   ;; Always just use left-to-right text. This makes Emacs a bit faster for very long lines
   (setq-default bidi-paragraph-direction 'left-to-right)
@@ -156,7 +168,7 @@
          ("C-a"   . move-beginning-of-line-or-indentation)
          ("C-x k" . kill-current-buffer)
          ("M-u"   . dakra-upcase-dwim)
-         ("M-l"   . dakra-downcase-dwim)
+         ("M-U"   . dakra-downcase-dwim)
          ("M-c"   . dakra-capitalize-dwim))
   :hook (((mu4e-compose-mode markdown-mode rst-mode git-commit-setup) . text-mode-autofill-setup)
          ((visual-fill-column-mode markdown-mode) . word-wrap-whitespace-mode))
@@ -238,14 +250,14 @@
   (savehist-mode))
 
 (use-package windmove
-  :bind (("s-i" . windmove-up)
-         ("s-k" . windmove-down)
-         ("s-j" . windmove-left)
-         ("s-l" . windmove-right)
-         ("s-J" . windmove-swap-states-left)
-         ("s-K" . windmove-swap-states-down)
-         ("s-I" . windmove-swap-states-up)
-         ("s-L" . windmove-swap-states-right)
+  :bind (("M-i" . windmove-up)
+         ("M-k" . windmove-down)
+         ("M-j" . windmove-left)
+         ("M-l" . windmove-right)
+         ("M-J" . windmove-swap-states-left)
+         ("M-K" . windmove-swap-states-down)
+         ("M-I" . windmove-swap-states-up)
+         ("M-L" . windmove-swap-states-right)
          ("C-M-i" . windmove-up)
          ("C-M-k" . windmove-down)
          ("C-M-j" . windmove-left)
@@ -369,7 +381,7 @@
          ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
          ("M-g m" . consult-mark)
          ("M-g k" . consult-global-mark)
-         ("M-i"   . consult-imenu)
+         ("M-m"   . consult-imenu)
          ("M-g i" . consult-imenu)
          ("M-g I" . consult-imenu-multi)
          ;; M-s bindings (search-map)
@@ -559,8 +571,7 @@
               ("C-M-<left>" . sp-backward-slurp-sexp)
               ("C-{" . sp-backward-barf-sexp)
               ("C-M-<right>" . sp-backward-barf-sexp)
-              ("M-S" . sp-split-sexp) ;; misc
-              ("M-j" . sp-join-sexp))
+              ("M-S" . sp-split-sexp))
   :config
   (require 'smartparens-config)
   (setq sp-base-key-bindings 'paredit)
@@ -629,7 +640,7 @@
     (define-key mc/keymap (kbd "C-.") 'mc/skip-to-next-like-this)))
 
 (use-package recentf
-  :defer 2
+  :demand t
   :config
   (add-to-list 'recentf-exclude "^/\\(?:ssh\\|su\\|sudo\\)?:")
   (add-to-list 'recentf-exclude no-littering-var-directory)
@@ -711,7 +722,7 @@
 (use-package project
   :bind-keymap (("s-p"   . project-prefix-map)  ; projectile-command-map
                 ("C-c p" . project-prefix-map))
-  :bind (("C-x SPC" . consult-project-extra-find)
+  :bind (("C-x C-x" . consult-project-extra-find)
          :map project-prefix-map
          ("SPC" . consult-project-extra-find)
          ("d"   . project-dired)
@@ -757,7 +768,7 @@ created a dedicated process for the project."
               ("M-." . org-open-at-point)  ; So M-. behaves like in source code.
               ("M-," . org-mark-ring-goto)
               ("M-;" . org-comment-dwim)
-              ("M-i" . consult-org-heading)
+              ("M-m" . consult-org-heading)
               ;; Disable adding and removing org-agenda files via keybinding.
               ("C-c [" . nil)
               ("C-c ]" . nil)
