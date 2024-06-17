@@ -33,6 +33,7 @@
 (use-package no-littering
   :demand t
   :config
+  (setq server-auth-dir (no-littering-expand-var-file-name "server"))
   ;; /etc is version controlled and I want to store mc-lists in git
   (setq mc/list-file (no-littering-expand-etc-file-name "mc-list.el"))
   ;; Put the auto-save and backup files in the var directory to the other data files
@@ -1110,12 +1111,12 @@ With two `C-u' `C-u' prefix args, add and display current project."
               ("C-c C-c" . eval-defun)
               ("C-c C-b" . eval-buffer)
               ("C-c C-k" . eval-buffer)
-              ("C-c ;"   . eval-print-as-comment)
+              ("C-c C-;"   . eval-print-as-comment)
               :map lisp-interaction-mode-map  ; Scratch buffer
               ("C-c C-c" . eval-defun)
               ("C-c C-b" . eval-buffer)
               ("C-c C-k" . eval-buffer)
-              ("C-c ;"   . eval-print-as-comment))
+              ("C-c C-;"   . eval-print-as-comment))
   :config
   (defvar eval-print-as-comment-prefix ";;=> ")
 
