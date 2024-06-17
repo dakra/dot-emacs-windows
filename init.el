@@ -383,6 +383,8 @@
          ("M-g m" . consult-mark)
          ("M-g k" . consult-global-mark)
          ("M-m"   . consult-imenu)
+         ("C-i"   . consult-imenu)
+         ("C-I"   . consult-imenu-multi)
          ("M-g i" . consult-imenu)
          ("M-g I" . consult-imenu-multi)
          ;; M-s bindings (search-map)
@@ -463,7 +465,7 @@
     "Activate corfu but with auto mode disabled."
     (setq-local corfu-auto nil)
     (corfu-mode))
-  
+
   (setq corfu-cycle t
         corfu-auto t
         corfu-auto-delay 0.1
@@ -499,6 +501,10 @@
                                        "<=>" "<=<" "=<=" "=>=" "<<=" "=<<"
                                        "=:=" "=!=" "==" "=~" "!~" "===" "::" ":=" ":>" ">:"
                                        ";;" "__" "..." ".." "&&" "++")))
+
+(use-package subword
+  :hook ((python-mode yaml-ts-mode conf-mode go-mode go-ts-mode clojure-mode cider-repl-mode
+                      java-mode java-ts-mode cds-mode js-mode js-ts-mode) . subword-mode))
 
 (use-package aggressive-indent
   :hook ((emacs-lisp-mode lisp-mode hy-mode clojure-mode css js-mode) . aggressive-indent-mode)
@@ -630,7 +636,6 @@
          ("C-x v" . mc/vertical-align-with-space)
          ("C-x n" . mc-hide-unmatched-lines-mode))
   :config
-  
   (with-eval-after-load 'multiple-cursors-core
     ;; Immediately load mc list, otherwise it will show as
     ;; changed as empty in my git repo
@@ -966,13 +971,13 @@ created a dedicated process for the project."
   :bind (("C-x g" . magit-status)
          ("C-x G" . magit-dispatch)
          ("C-x M-g" . magit-dispatch)
-         ("C-x C-m C-p" . magit-list-repositories)
-         ("C-x C-m C-m" . magit-status)
-         ("C-x C-m C-f" . magit-file-dispatch)
-         ("C-x C-m C-l" . magit-log)
-         ("C-x C-m C-L" . magit-log-buffer-file)
-         ("C-x C-m C-b" . magit-blame-addition)
-         ("C-x C-m C-B" . magit-blame)
+         ("s-m p" . magit-list-repositories)
+         ("s-m m" . magit-status)
+         ("s-m f" . magit-file-dispatch)
+         ("s-m l" . magit-log)
+         ("s-m L" . magit-log-buffer-file)
+         ("s-m b" . magit-blame-addition)
+         ("s-m B" . magit-blame)
          :map magit-process-mode-map
          ("k" . magit-process-kill))
   :hook (after-save . magit-after-save-refresh-status)
