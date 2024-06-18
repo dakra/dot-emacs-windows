@@ -1,7 +1,7 @@
-(define-package "minions" "20240415.1544" "A minor-mode menu for the mode line"
+(define-package "minions" "20240618.1732" "A minor-mode menu for the mode line"
   '((emacs "25.2")
-    (compat "29.1.4.1"))
-  :commit "ef234da0625397b994c0a17d1038037732c3c457" :authors
+    (compat "29.1.4.5"))
+  :commit "4566325917791b878430526f42349a644b03089d" :authors
   '(("Jonas Bernoulli" . "emacs.minions@jonas.bernoulli.dev"))
   :maintainers
   '(("Jonas Bernoulli" . "emacs.minions@jonas.bernoulli.dev"))
