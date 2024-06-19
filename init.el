@@ -290,6 +290,8 @@
         (no-littering-expand-var-file-name "eglot/java/junit-platform-console-standalone/junit-platform-console-standalone.jar")))
 
 (use-package lsp-mode
+  :commands (lsp lsp-deferred)
+  :hook (((java-mode java-ts-mode) . lsp-deferred))
   :bind (:map lsp-mode-map
               ("C-c C-a" . lsp-execute-code-action)
               ("M-." . lsp-find-definition-other)
@@ -304,6 +306,7 @@
 
   (setq lsp-enable-on-type-formatting nil)
   (setq lsp-enable-indentation nil)
+  (setq lsp-enable-snippet nil)
 
   (defun lsp-find-definition-other (other?)
     "Like `lsp-find-definition' but open in other window when called with prefix arg."
@@ -328,7 +331,6 @@
   (setq-default flycheck-disabled-checkers '(c/c++-clang c/c++-cppcheck c/c++-gcc)))
 
 (use-package lsp-ui
-  :commands (lsp lsp-deferred)
   :bind (:map lsp-mode-map
               ("M-?" . lsp-ui-doc-toggle))
   :config
@@ -358,13 +360,14 @@
 
 (use-package lsp-java
   :after lsp
-  :hook (((java-mode java-ts-mode) . lsp-deferred)
-         ((java-mode java-ts-mode) . lsp-java-boot-lens-mode))
+  :hook (((java-mode java-ts-mode) . lsp-java-boot-lens-mode))
   :config
+  (setq lsp-java-compile-null-analysis-mode "automatic")
+
   ;; Use Google style formatting by default
-  (setq lsp-java-format-settings-url
-        "https://raw.githubusercontent.com/google/styleguide/gh-pages/eclipse-java-google-style.xml")
-  (setq lsp-java-format-settings-profile "GoogleStyle")
+  ;; (setq lsp-java-format-settings-url
+  ;;      "https://raw.githubusercontent.com/google/styleguide/gh-pages/eclipse-java-google-style.xml")
+  ;; (setq lsp-java-format-settings-profile "GoogleStyle")
 
   ;; Use 3rd party decompiler
   (setq lsp-java-content-provider-preferred "fernflower"))
