@@ -259,15 +259,7 @@
          ("M-J" . windmove-swap-states-left)
          ("M-K" . windmove-swap-states-down)
          ("M-I" . windmove-swap-states-up)
-         ("M-L" . windmove-swap-states-right)
-         ("C-M-i" . windmove-up)
-         ("C-M-k" . windmove-down)
-         ("C-M-j" . windmove-left)
-         ("C-M-l" . windmove-right)
-         ("C-M-S-j" . windmove-swap-states-left)
-         ("C-M-S-k" . windmove-swap-states-down)
-         ("C-M-S-i" . windmove-swap-states-up)
-         ("C-M-S-l" . windmove-swap-states-right)))
+         ("M-L" . windmove-swap-states-right)))
 
 ;; So-long: Mitigating slowness due to extremely long lines
 (use-package so-long
@@ -288,6 +280,7 @@
   (setq eglot-autoshutdown t))
 
 (use-package eglot-java
+  :disabled t
   :after eglot
   :config
   (setq eglot-java-eclipse-jdt-cache-directory
@@ -295,6 +288,102 @@
   (setq eglot-java-server-install-dir (no-littering-expand-var-file-name "eglot/java/eclipse.jdt.ls"))
   (setq eglot-java-junit-platform-console-standalone-jar
         (no-littering-expand-var-file-name "eglot/java/junit-platform-console-standalone/junit-platform-console-standalone.jar")))
+
+(use-package lsp-mode
+  :bind (:map lsp-mode-map
+              ("C-c C-a" . lsp-execute-code-action)
+              ("M-." . lsp-find-definition-other)
+              ("M-," . lsp-find-references-other))
+  :init (setq lsp-keymap-prefix nil)  ; Don't map the lsp keymap to any key
+  :config
+  ;; Shutdown lsp-server when all buffers associated with that server are closed
+  (setq lsp-keep-workspace-alive nil)
+
+  ;; Increase lsp file watch threshold when lsp shows a warning
+  (setq lsp-file-watch-threshold 1500)
+
+  (setq lsp-enable-on-type-formatting nil)
+  (setq lsp-enable-indentation nil)
+
+  (defun lsp-find-definition-other (other?)
+    "Like `lsp-find-definition' but open in other window when called with prefix arg."
+    (interactive "P")
+    (back-button-push-mark-local-and-global)
+    (if other?
+        (lsp-find-definition :display-action 'window)
+      (lsp-find-definition)))
+  (defun lsp-find-references-other (other?)
+    "Like `lsp-find-references' but open in other window when called with prefix arg."
+    (interactive "P")
+    (back-button-push-mark-local-and-global)
+    (if other?
+        (lsp-find-references :display-action 'window)
+      (lsp-find-references)))
+
+  ;; Don't watch `build' and `.gradle' directories for file changes
+  (add-to-list 'lsp-file-watch-ignored "[/\\\\]build$")
+  (add-to-list 'lsp-file-watch-ignored "[/\\\\]\\.gradle$")
+
+  ;; (require 'yasnippet)  ;; We use yasnippet for lsp snippet support
+  (setq-default flycheck-disabled-checkers '(c/c++-clang c/c++-cppcheck c/c++-gcc)))
+
+(use-package lsp-ui
+  :commands (lsp lsp-deferred)
+  :bind (:map lsp-mode-map
+              ("M-?" . lsp-ui-doc-toggle))
+  :config
+  (defun lsp-ui-doc-toggle ()
+    "Shows or hides lsp-ui-doc popup."
+    (interactive)
+    (if lsp-ui-doc--bounds
+        (lsp-ui-doc-hide)
+      (lsp-ui-doc-show)))
+
+  ;; Deactivate most of the annoying "fancy features"
+  (setq lsp-headerline-breadcrumb-enable nil)
+  (setq lsp-ui-doc-enable nil)
+  (setq lsp-ui-doc-use-childframe t)
+  (setq lsp-ui-doc-include-signature t)
+  (setq lsp-ui-doc-position 'at-point)
+  (setq lsp-lens-enable nil)  ;; "1 reference" etc at the end of the line
+  (setq lsp-ui-sideline-enable nil)
+  (setq lsp-ui-sideline-show-hover nil)
+  (setq lsp-ui-sideline-show-symbol nil))
+
+(use-package lsp-treemacs
+  :after lsp-mode
+  :config
+  ;; Enable bidirectional synchronization of lsp workspace folders and treemacs
+  (lsp-treemacs-sync-mode))
+
+(use-package lsp-java
+  :after lsp
+  :hook (((java-mode java-ts-mode) . lsp-deferred)
+         ((java-mode java-ts-mode) . lsp-java-boot-lens-mode))
+  :config
+  ;; Use Google style formatting by default
+  (setq lsp-java-format-settings-url
+        "https://raw.githubusercontent.com/google/styleguide/gh-pages/eclipse-java-google-style.xml")
+  (setq lsp-java-format-settings-profile "GoogleStyle")
+
+  ;; Use 3rd party decompiler
+  (setq lsp-java-content-provider-preferred "fernflower"))
+
+(use-package dap-mode
+  :after lsp-mode
+  :bind (:map dap-server-log-mode-map
+              ("g" . recompile)
+              :map dap-mode-map
+              ([f9]    . dap-continue)
+              ([S-f9]  . dap-disconnect)
+              ([f10]   . dap-next)
+              ([f11]   . dap-step-in)
+              ([S-f11] . dap-step-out))
+  :config
+  (setq dap-auto-configure-features '(sessions locals controls tooltip)))
+
+(use-package dap-java
+  :after lsp-java)
 
 (use-package eldoc
   :hook (prog-mode . eldoc-mode)
@@ -1158,7 +1247,7 @@ With two `C-u' `C-u' prefix args, add and display current project."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(clojure-mode multiple-cursors ob-restclient restclient orgit org-appear diff-hl git-link avy gumshoe markdown-mode tempel ligature moe-theme eglot-java treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo vertico smartparens smart-region rainbow-delimiters org-modern orderless no-littering marginalia magit embark consult aggressive-indent)))
+   '(dap-mode lsp-java lsp-mode lsp-treemacs lsp-ui eldoc clojure-mode multiple-cursors ob-restclient restclient orgit org-appear diff-hl git-link avy gumshoe markdown-mode tempel ligature moe-theme treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo vertico smartparens smart-region rainbow-delimiters org-modern orderless no-littering marginalia magit embark consult aggressive-indent)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
