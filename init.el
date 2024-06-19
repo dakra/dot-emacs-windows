@@ -331,6 +331,7 @@
   (setq-default flycheck-disabled-checkers '(c/c++-clang c/c++-cppcheck c/c++-gcc)))
 
 (use-package lsp-ui
+  :after lsp-mode
   :bind (:map lsp-mode-map
               ("M-?" . lsp-ui-doc-toggle))
   :config
@@ -359,7 +360,7 @@
   (lsp-treemacs-sync-mode))
 
 (use-package lsp-java
-  :after lsp
+  :after lsp-mode
   :hook (((java-mode java-ts-mode) . lsp-java-boot-lens-mode))
   :config
   (setq lsp-java-compile-null-analysis-mode "automatic")
@@ -369,6 +370,14 @@
   ;;      "https://raw.githubusercontent.com/google/styleguide/gh-pages/eclipse-java-google-style.xml")
   ;; (setq lsp-java-format-settings-profile "GoogleStyle")
 
+  (setq lsp-java-vmargs
+        '("-XX:+UseParallelGC"
+          "-XX:GCTimeRatio=4"
+          "-XX:AdaptiveSizePolicyWeight=90"
+          "-Dsun.zip.disableMemoryMapping=true"
+          "-Xmx4G"
+          "-Xms100m"))
+  
   ;; Use 3rd party decompiler
   (setq lsp-java-content-provider-preferred "fernflower"))
 
@@ -383,10 +392,11 @@
               ([f11]   . dap-step-in)
               ([S-f11] . dap-step-out))
   :config
-  (setq dap-auto-configure-features '(sessions locals controls tooltip)))
+  (setq dap-auto-configure-features '(sessions locals controls tooltip))
+  (dap-auto-configure-mode))
 
 (use-package dap-java
-  :after lsp-java)
+  :after dap-mode)
 
 (use-package eldoc
   :hook (prog-mode . eldoc-mode)
