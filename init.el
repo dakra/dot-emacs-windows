@@ -1,11 +1,12 @@
 ;; Deactivate tool- and menu-bar for terminal Emacs. (For GUI it's disabled in early-init.el)
 (tool-bar-mode -1)
 (menu-bar-mode -1)
-
 ;; Disable the scroll-bar
 (scroll-bar-mode -1)
 
 (setq load-prefer-newer t)
+
+(setq gc-cons-threshold (* 256 1024 1024))  ;; 256MB
 
 ;; Disable startup screen and startup echo area message and select the scratch buffer by default
 (setq inhibit-startup-buffer-menu t)
@@ -289,6 +290,45 @@
   (setq eglot-java-junit-platform-console-standalone-jar
         (no-littering-expand-var-file-name "eglot/java/junit-platform-console-standalone/junit-platform-console-standalone.jar")))
 
+(use-package flycheck
+  :hook (((prog-mode
+           ledger-mode
+           systemd-mode
+           mu4e-compose-mode
+           markdown-mode
+           rst-mode) . flycheck-mode)
+         (flycheck-mode . mp-flycheck-prefer-eldoc))
+  :config
+  ;; Only do flycheck when I actually safe the buffer
+  (setq flycheck-check-syntax-automatically '(save mode-enable))
+
+  ;; Work with `eldoc-documentation-functions'
+  ;; From https://www.masteringemacs.org/article/seamlessly-merge-multiple-documentation-sources-eldoc
+  (defun mp-flycheck-eldoc (callback &rest _ignored)
+    "Print flycheck messages at point by calling CALLBACK."
+    (when-let ((flycheck-errors (and flycheck-mode (flycheck-overlay-errors-at (point)))))
+      (mapc
+       (lambda (err)
+         (funcall callback
+                  (format "%s: %s"
+                          (let ((level (flycheck-error-level err)))
+                            (pcase level
+                              ('info (propertize "I" 'face 'flycheck-error-list-info))
+                              ('error (propertize "E" 'face 'flycheck-error-list-error))
+                              ('warning (propertize "W" 'face 'flycheck-error-list-warning))
+                              (_ level)))
+                          (flycheck-error-message err))
+                  :thing (or (flycheck-error-id err)
+                             (flycheck-error-group err))
+                  :face 'font-lock-doc-face))
+       flycheck-errors)))
+
+  (defun mp-flycheck-prefer-eldoc ()
+    (add-hook 'eldoc-documentation-functions #'mp-flycheck-eldoc nil t)
+    (setq eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly)
+    (setq flycheck-display-errors-function nil)
+    (setq flycheck-help-echo-function nil)))
+
 (use-package lsp-mode
   :commands (lsp lsp-deferred)
   :hook (((java-mode java-ts-mode) . lsp-deferred))
@@ -304,9 +344,10 @@
   ;; Increase lsp file watch threshold when lsp shows a warning
   (setq lsp-file-watch-threshold 1500)
 
-  (setq lsp-enable-on-type-formatting nil)
-  (setq lsp-enable-indentation nil)
-  (setq lsp-enable-snippet nil)
+  (setq lsp-enable-on-type-formatting nil
+        lsp-enable-indentation nil
+        lsp-enable-snippet nil
+        lsp-semantic-tokens-enable t)
 
   (defun lsp-find-definition-other (other?)
     "Like `lsp-find-definition' but open in other window when called with prefix arg."
@@ -1260,7 +1301,7 @@ With two `C-u' `C-u' prefix args, add and display current project."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(dap-mode lsp-java lsp-mode lsp-treemacs lsp-ui eldoc clojure-mode multiple-cursors ob-restclient restclient orgit org-appear diff-hl git-link avy gumshoe markdown-mode tempel ligature moe-theme treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo vertico smartparens smart-region rainbow-delimiters org-modern orderless no-littering marginalia magit embark consult aggressive-indent)))
+   '(flycheck dap-mode lsp-java lsp-mode lsp-treemacs lsp-ui eldoc clojure-mode multiple-cursors ob-restclient restclient orgit org-appear diff-hl git-link avy gumshoe markdown-mode tempel ligature moe-theme treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo vertico smartparens smart-region rainbow-delimiters org-modern orderless no-littering marginalia magit embark consult aggressive-indent)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
