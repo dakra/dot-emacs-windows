@@ -352,14 +352,12 @@
   (defun lsp-find-definition-other (other?)
     "Like `lsp-find-definition' but open in other window when called with prefix arg."
     (interactive "P")
-    (back-button-push-mark-local-and-global)
     (if other?
         (lsp-find-definition :display-action 'window)
       (lsp-find-definition)))
   (defun lsp-find-references-other (other?)
     "Like `lsp-find-references' but open in other window when called with prefix arg."
     (interactive "P")
-    (back-button-push-mark-local-and-global)
     (if other?
         (lsp-find-references :display-action 'window)
       (lsp-find-references)))
@@ -1148,6 +1146,13 @@ created a dedicated process for the project."
                           'magit-insert-untracked-files
                           nil)
 
+  ;; Disable safety nets
+  (setq magit-commit-squash-confirm nil)
+  (setq magit-save-repository-buffers 'dontask)
+  (setf (nth 2 (assq 'magit-stash-pop  magit-dwim-selection)) t)
+  (dolist (x '(rename resurrect untrack stage-all-changes unstage-all-changes))
+    (add-to-list 'magit-no-confirm x t))
+
   ;; When showing refs (In magit status press `y y') show only merged into master by default
   (setq magit-show-refs-arguments '("--merged=master"))
   ;; Show color and graph in magit-log. Since color makes it a bit slow, only show the last 128 commits
@@ -1180,6 +1185,7 @@ created a dedicated process for the project."
   :bind (("C-c G" . git-link))
   :config
   (add-to-list 'git-link-remote-alist '("git\\.enbw\\.net" git-link-codeberg))
+  (add-to-list 'git-link-commit-remote-alist '("git\\.enbw\\.net" git-link-commit-codeberg))
   (setq git-link-use-commit t
         git-link-open-in-browser t))
 
