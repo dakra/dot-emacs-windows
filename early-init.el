@@ -4,6 +4,8 @@
 (push '(tool-bar-lines . 0) default-frame-alist)
 (push '(menu-bar-lines . 0) default-frame-alist)
 
+(setq load-prefer-newer t)
+
 ;; Since Emacs 27.1 we have to disable package.el in the early init file.
 (setq package-enable-at-startup nil)
 

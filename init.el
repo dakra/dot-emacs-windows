@@ -4,8 +4,6 @@
 ;; Disable the scroll-bar
 (scroll-bar-mode -1)
 
-(setq load-prefer-newer t)
-
 (setq gc-cons-threshold (* 256 1024 1024))  ;; 256MB
 
 ;; Disable startup screen and startup echo area message and select the scratch buffer by default
