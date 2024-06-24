@@ -1,3 +1,5 @@
+;;; init.el --- user-init-file                    -*- lexical-binding: t -*-
+
 ;; Deactivate tool- and menu-bar for terminal Emacs. (For GUI it's disabled in early-init.el)
 (tool-bar-mode -1)
 (menu-bar-mode -1)
@@ -9,7 +11,7 @@
 ;; Disable startup screen and startup echo area message and select the scratch buffer by default
 (setq inhibit-startup-buffer-menu t)
 (setq inhibit-startup-screen t)
-(setq inhibit-startup-echo-area-message "daniel")
+(setq inhibit-startup-echo-area-message user-login-name)
 (setq initial-buffer-choice t)
 (setq initial-scratch-message nil)
 
@@ -60,17 +62,18 @@
   ;; Load the theme of your choice.
   ;; (load-theme 'modus-vivendi)
 
-  (setq user-full-name "Daniel Kraus"
-        user-mail-address "daniel@kraus.my")
-
   ;; Register all left windows-key presses as "super".
   ;; Doesn't work for "s-l" as this always locks Windows on a low level.
-  (when (eq system-type 'windows-nt)
-    (setq w32-lwindow-modifier 'super
-          w32-pass-lwindow-to-system nil
-          w32-pass-alt-to-system nil)
-    (w32-register-hot-key [M-])
-    (w32-register-hot-key [s-]))
+  (if (eq system-type 'windows-nt)
+      (progn
+        (prefer-coding-system 'utf-8-dos)
+
+        (setq w32-lwindow-modifier 'super
+              w32-pass-lwindow-to-system nil
+              w32-pass-alt-to-system nil)
+        (w32-register-hot-key [M-])
+        (w32-register-hot-key [s-]))
+    (prefer-coding-system 'utf-8))
 
   ;; Always just use left-to-right text. This makes Emacs a bit faster for very long lines
   (setq-default bidi-paragraph-direction 'left-to-right)
@@ -100,8 +103,6 @@
   ;; replacing it with the Emacs’ text.
   (setq save-interprogram-paste-before-kill t)
 
-  ;; Default to utf-8 encoding
-  (prefer-coding-system 'utf-8)
   ;; Accept 'UTF-8' (uppercase) as a valid encoding in the coding header
   (define-coding-system-alias 'UTF-8 'utf-8)
 
@@ -811,6 +812,7 @@
   (setq avy-timeout-seconds 0.2))
 
 (use-package gumshoe
+  :disabled t
   :defer 1
   :bind (("C-x SPC" . gumshoe-backtrack)
          ("C-x C-SPC" . gumshoe-buf-backtrack)
@@ -1182,8 +1184,6 @@ created a dedicated process for the project."
 (use-package git-link
   :bind (("C-c G" . git-link))
   :config
-  (add-to-list 'git-link-remote-alist '("git\\.enbw\\.net" git-link-codeberg))
-  (add-to-list 'git-link-commit-remote-alist '("git\\.enbw\\.net" git-link-commit-codeberg))
   (setq git-link-use-commit t
         git-link-open-in-browser t))
 
@@ -1298,6 +1298,9 @@ With two `C-u' `C-u' prefix args, add and display current project."
                ("P" . kubel-port-forward-pod)
                ("n" . next-line)
                ("p" . previous-line))))
+
+;; Load personal config that shouldn't end up on github
+(load-file (expand-file-name "personal.el" user-emacs-directory))
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
