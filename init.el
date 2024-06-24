@@ -330,7 +330,8 @@
 
 (use-package lsp-mode
   :commands (lsp lsp-deferred)
-  :hook (((java-mode java-ts-mode) . lsp-deferred))
+  :hook (((java-mode java-ts-mode) . lsp-deferred)
+         (lsp-completion-mode . lsp-mode-setup-orderless))
   :bind (:map lsp-mode-map
               ("C-c C-a" . lsp-execute-code-action)
               ("M-." . lsp-find-definition-other)
@@ -340,8 +341,12 @@
   ;; Shutdown lsp-server when all buffers associated with that server are closed
   (setq lsp-keep-workspace-alive nil)
 
-  ;; Increase lsp file watch threshold when lsp shows a warning
-  (setq lsp-file-watch-threshold 1500)
+  (require 'lsp-completion)
+  (setq lsp-completion-provider :none)  ;; we use Corfu
+
+  (defun lsp-mode-setup-orderless ()
+    (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+          '(orderless)))
 
   (setq lsp-enable-on-type-formatting nil
         lsp-enable-indentation nil
@@ -402,16 +407,18 @@
   :hook (((java-mode java-ts-mode) . lsp-java-boot-lens-mode))
   :config
   (setq lsp-java-compile-null-analysis-mode "automatic")
-
+  
   ;; Use Google style formatting by default
   ;; (setq lsp-java-format-settings-url
   ;;      "https://raw.githubusercontent.com/google/styleguide/gh-pages/eclipse-java-google-style.xml")
   ;; (setq lsp-java-format-settings-profile "GoogleStyle")
 
   (setq lsp-java-vmargs
-        '("-XX:+UseParallelGC"
+        '("-noverify"
+          "-XX:+UseParallelGC"
           "-XX:GCTimeRatio=4"
           "-XX:AdaptiveSizePolicyWeight=90"
+          "-XX:+UseStringDeduplication"
           "-Dsun.zip.disableMemoryMapping=true"
           "-Xmx4G"
           "-Xms100m"))
