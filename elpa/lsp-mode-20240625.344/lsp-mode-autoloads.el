@@ -753,6 +753,11 @@ it is disabled.
 (register-definition-prefixes "lsp-rf" '("expand-start-command" "lsp-rf-language-server-" "parse-rf-language-server-"))
 
 
+;;; Generated autoloads from lsp-roslyn.el
+
+(register-definition-prefixes "lsp-roslyn" '("lsp-roslyn-"))
+
+
 ;;; Generated autoloads from lsp-rpm-spec.el
 
 (register-definition-prefixes "lsp-rpm-spec" '("lsp-rpm-spec-"))

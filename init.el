@@ -47,7 +47,7 @@
         native-comp-async-jobs-number 4)
 
   ;; NOTE: To compile eln files you first have to byte-compile them with something like:
-  ;; (byte-recompile-directory (expand-file-name "~/.emacs.d") 0)
+  ;; (byte-recompile-directory (expand-file-name "~/.emacs.d/elpa") 0)
 
   (add-to-list 'default-frame-alist '(font . "Fira Code-10:weight=regular:width=normal"))
   (set-frame-font "Fira Code-10:weight=regular:width=normal" nil t)

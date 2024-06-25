@@ -1,15 +1,15 @@
-(define-package "vertico" "20240511.2047" "VERTical Interactive COmpletion"
+(define-package "org-modern" "20240625.452" "Modern looks for Org"
   '((emacs "27.1")
     (compat "29.1.4.4"))
-  :commit "ba650a7ab90d66686ba787937ac9e71f749c598e" :authors
+  :commit "c3c97156ecb45cd666bb0bb9d8e7d08e923cb65e" :authors
   '(("Daniel Mendler" . "mail@daniel-mendler.de"))
   :maintainers
   '(("Daniel Mendler" . "mail@daniel-mendler.de"))
   :maintainer
   '("Daniel Mendler" . "mail@daniel-mendler.de")
   :keywords
-  '("convenience" "files" "matching" "completion")
-  :url "https://github.com/minad/vertico")
+  '("outlines" "hypermedia" "text")
+  :url "https://github.com/minad/org-modern")
 ;; Local Variables:
 ;; no-byte-compile: t
 ;; End:

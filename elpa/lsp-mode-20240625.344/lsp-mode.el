@@ -185,7 +185,7 @@ As defined by the Language Server Protocol 3.16."
      lsp-mojo lsp-move lsp-mssql lsp-nginx lsp-nim lsp-nix lsp-nushell lsp-ocaml
      lsp-openscad lsp-pascal lsp-perl lsp-perlnavigator lsp-php lsp-pls
      lsp-purescript lsp-pwsh lsp-pyls lsp-pylsp lsp-pyright lsp-python-ms
-     lsp-qml lsp-r lsp-racket lsp-remark lsp-rf lsp-rubocop lsp-ruby-lsp
+     lsp-qml lsp-r lsp-racket lsp-remark lsp-rf lsp-roslyn lsp-rubocop lsp-ruby-lsp
      lsp-ruby-syntax-tree lsp-ruff-lsp lsp-rust lsp-semgrep lsp-shader
      lsp-solargraph lsp-solidity lsp-sonarlint lsp-sorbet lsp-sourcekit
      lsp-sql lsp-sqls lsp-steep lsp-svelte lsp-tailwindcss lsp-terraform
@@ -902,6 +902,7 @@ Changes take effect only when a new session is started."
     (ruby-mode . "ruby")
     (enh-ruby-mode . "ruby")
     (ruby-ts-mode . "ruby")
+    (feature-mode . "cucumber")
     (fortran-mode . "fortran")
     (f90-mode . "fortran")
     (elm-mode . "elm")

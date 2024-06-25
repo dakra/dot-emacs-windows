@@ -49,6 +49,8 @@
         markdown-exdent-or-delete
         markdown-outdent-or-delete
         mouse-yank-primary
+        move-beginning-of-line
+        move-beginning-of-line-or-indentation
         org-archive-subtree-default
         org-beginning-of-line
         org-ctrl-c-ctrl-c
@@ -96,6 +98,8 @@
         wdired--self-insert
         web-mode-comment-or-uncomment
         wgrep-mark-deletion
+        whole-line-or-region-comment-dwim
+        whole-line-or-region-comment-dwim-2
         whole-line-or-region-kill-region
         whole-line-or-region-sp-kill-region
         whole-line-or-region-yank
