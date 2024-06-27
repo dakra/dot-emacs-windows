@@ -1,3 +1,6 @@
 [submodule "moe-theme"]
 	path = lib/moe-theme
 	url = https://github.com/dakra/moe-theme.el.git
+[submodule "lib/eat"]
+	path = lib/eat
+	url = https://codeberg.org/akib/emacs-eat.git

@@ -866,7 +866,8 @@
 
 (use-package eshell
   :bind (("C-x m" . eshell))
-  :init (setq eshell-aliases-file (no-littering-expand-etc-file-name "eshell-aliases"))
+  :init
+  (setq eshell-aliases-file (no-littering-expand-etc-file-name "eshell-aliases"))
   :config
   (setq eshell-scroll-to-bottom-on-input 'all
         eshell-error-if-no-glob t
@@ -875,6 +876,11 @@
                                  "nmtui" "dstat" "mycli" "pgcli" "vue" "ngrok"
                                  "tmux" "screen" "top" "htop" "less" "more" "ncftp")
         eshell-prefer-lisp-functions nil))
+
+(use-package eat
+  :load-path "lib/eat"
+  :commands (eat)
+  :hook (eshell-load-hook . eat-eshell-visual-command-mode))
 
 (use-package project
   :bind-keymap (("s-p"   . project-prefix-map)  ; projectile-command-map
