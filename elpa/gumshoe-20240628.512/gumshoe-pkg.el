@@ -1,6 +1,6 @@
-(define-package "gumshoe" "20240304.525" "Scoped spatial and temporal POINT movement tracking"
+(define-package "gumshoe" "20240628.512" "Scoped spatial and temporal POINT movement tracking"
   '((emacs "25.1"))
-  :commit "223d19ffbd6296864a775d18025150ccbcbc7800" :authors
+  :commit "bdb7997d466b56948fe4ab5b6c6a4bed2fe95be7" :authors
   '(("overdr0ne"))
   :maintainers
   '(("overdr0ne"))

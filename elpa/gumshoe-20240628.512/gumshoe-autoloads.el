@@ -49,6 +49,10 @@ it is disabled.
 (register-definition-prefixes "gumshoe-core" '("global-gumshoe-b" "gumshoe-"))
 
 
+;;; Generated autoloads from gumshoe-persp.el
+
+(register-definition-prefixes "gumshoe-persp" '("global-gumshoe-persp-mode" "gumshoe-"))
+
 ;;; End of scraped data
 
 (provide 'gumshoe-autoloads)

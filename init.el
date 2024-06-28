@@ -822,7 +822,6 @@
   (setq avy-timeout-seconds 0.2))
 
 (use-package gumshoe
-  :disabled t
   :defer 1
   :bind (("C-x SPC" . gumshoe-backtrack)
          ("C-x C-SPC" . gumshoe-buf-backtrack)
