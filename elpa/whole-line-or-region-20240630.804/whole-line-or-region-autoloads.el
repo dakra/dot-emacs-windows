@@ -32,6 +32,8 @@ evaluate `whole-line-or-region-local-mode'.
 The mode's hook is called both when the mode is enabled and when
 it is disabled.
 
+\\{whole-line-or-region-local-mode-map}
+
 (fn &optional ARG)" t)
 (put 'whole-line-or-region-global-mode 'globalized-minor-mode t)
 (defvar whole-line-or-region-global-mode nil "\

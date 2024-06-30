@@ -1,7 +1,6 @@
-(define-package "whole-line-or-region" "20201214.650" "Operate on current line if region undefined"
-  '((emacs "24.1")
-    (cl-lib "0.6"))
-  :commit "ba193b2034388bbc384cb04093150fca56f7e262" :authors
+(define-package "whole-line-or-region" "20240630.804" "Operate on current line if region undefined"
+  '((emacs "24.4"))
+  :commit "f39fd03cf563ffdf57144a7586a5e845969fc641" :authors
   '(("Joe Casadonte" . "emacs@northbound-train.com"))
   :maintainers
   '(("Steve Purcell" . "steve@sanityinc.com"))
