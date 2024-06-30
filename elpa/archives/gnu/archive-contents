@@ -1356,7 +1356,7 @@
 		     (:url . "https://elpa.gnu.org/packages/elisp-benchmarks.html")
 		     (:commit . "1a3d97954957a95a179806e0d49ca6d178b097af"))])
  (ellama .
-	 [(0 9 11)
+	 [(0 10 0)
 	  ((emacs
 	    (28 1))
 	   (llm
@@ -1369,7 +1369,7 @@
 	   (:maintainer "Sergey Kostyaev" . "sskostyaev@gmail.com")
 	   (:authors
 	    ("Sergey Kostyaev" . "sskostyaev@gmail.com"))
-	   (:commit . "968b8631d102c7fd051dbe9eb077755964bb47a2"))])
+	   (:commit . "eef3840384dd5b369a07036c776f93df6d8c6641"))])
  (emacs-gc-stats .
 		 [(1 4 2)
 		  ((emacs
@@ -2221,7 +2221,7 @@
 		(:url . "https://elpa.gnu.org/packages/jgraph-mode.html")
 		(:commit . "4e13f89fe8837b84d40b969e6a5431816180a747"))])
  (jinx .
-       [(1 8)
+       [(1 9)
 	((emacs
 	  (27 1))
 	 (compat
@@ -2232,7 +2232,7 @@
 	 (:maintainer "Daniel Mendler" . "mail@daniel-mendler.de")
 	 (:authors
 	  ("Daniel Mendler" . "mail@daniel-mendler.de"))
-	 (:commit . "d053303b54d8ceb15ee496bf7019837e70876410"))])
+	 (:commit . "4580aad8a0267bf30c98d210b6bdc1a08b1aad75"))])
  (jit-spell .
 	    [(0 4)
 	     ((emacs
@@ -2954,7 +2954,7 @@
 	       ("Omar Antolín Camarena" . "omar@matem.unam.mx"))
 	      (:commit . "3847f311077efa17951a786d2759f2639c5f43c8"))])
  (org .
-      [(9 7 5)
+      [(9 7 6)
        ((emacs
 	 (26 1)))
        "Outline-based notes management and organizer" tar
@@ -2963,7 +2963,7 @@
 	(:maintainer "Bastien Guerry" . "bzg@gnu.org")
 	(:authors
 	 ("Carsten Dominik" . "carsten.dominik@gmail.com"))
-	(:commit . "eafa479069687d87d81c11ddf655c181dd57f8b5"))])
+	(:commit . "7a45270b114c3d6140848ce13b6d4ae366074583"))])
  (org-contacts .
 	       [(1 1)
 		((emacs
@@ -4214,7 +4214,7 @@
 	      ("Paul D. Nelson" . "nelson.paul.david@gmail.com"))
 	     (:commit . "ee1957f3bce6ed04627b985e95a17db190781e06"))])
  (tex-parens .
-	     [(0 2)
+	     [(0 3)
 	      ((emacs
 		(27 1))
 	       (auctex
@@ -4225,7 +4225,7 @@
 	       (:maintainer "Paul D. Nelson" . "nelson.paul.david@gmail.com")
 	       (:authors
 		("Paul D. Nelson" . "nelson.paul.david@gmail.com"))
-	       (:commit . "d2f88832651ae2271b0267dae08b5d01c063cce1"))])
+	       (:commit . "ae2a66e3bfd1cdc37cc3cb2416d940aca1460c8b"))])
  (theme-buffet .
 	       [(0 1 2)
 		((emacs
@@ -4306,16 +4306,16 @@
 		  (:url . "https://elpa.gnu.org/packages/track-changes.html")
 		  (:commit . "44036b32ba398cf284320285b60be35874b6eea5"))])
  (tramp .
-	[(2 6 3)
+	[(2 7 1)
 	 ((emacs
-	   (26 1)))
+	   (27 1)))
 	 "Transparent Remote Access, Multiple Protocol" tar
 	 ((:url . "https://www.gnu.org/software/tramp/")
 	  (:keywords "comm" "processes")
 	  (:maintainer "Michael Albinus" . "michael.albinus@gmx.de")
 	  (:authors
 	   ("Kai Großjohann" . "kai.grossjohann@gmx.net"))
-	  (:commit . "3d3b95bd87d858092ee33ed4f5c7acfbf44a48f2"))])
+	  (:commit . "fe5699e6627f883fa50964ea01b7d23555832ec4"))])
  (tramp-nspawn .
 	       [(1 0 1)
 		((emacs

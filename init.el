@@ -272,6 +272,9 @@
         compilation-always-kill t  ;; Kill old compile processes before starting a new one
         compilation-scroll-output t))  ;; Scroll with the compilation output
 
+(use-package ansi-color
+  :hook (compilation-filter . ansi-color-compilation-filter))
+
 (use-package eglot
   :defer t
   :config
@@ -1203,8 +1206,9 @@ created a dedicated process for the project."
         git-link-open-in-browser t))
 
 (use-package treemacs
-  :bind (([f8]        . treemacs-toggle-or-select)
+  :bind (([f8] . treemacs-toggle-or-select)
          :map treemacs-mode-map
+         ("M-l" . nil)  ;; We bind `M-l' to `windmove-right'
          ("C-t a" . treemacs-add-project-to-workspace)
          ("C-t d" . treemacs-remove-project)
          ("C-t r" . treemacs-rename-project)
