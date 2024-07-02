@@ -927,24 +927,26 @@ created a dedicated process for the project."
   (setq project-switch-commands #'consult-project-extra-find))
 
 (use-package org
-  :bind (:map org-mode-map
-              ("<M-return>" . org-insert-todo-heading-respect-content)
-              ("<M-S-return>" . org-meta-return)
-              ("M-." . org-open-at-point)  ; So M-. behaves like in source code.
-              ("M-," . org-mark-ring-goto)
-              ("M-;" . org-comment-dwim)
-              ("M-m" . consult-org-heading)
-              ;; Disable adding and removing org-agenda files via keybinding.
-              ("C-c [" . nil)
-              ("C-c ]" . nil)
-              ("\C-c TAB" . nil)  ;; Remove for tempel-expand
-              ("C-a" . org-beginning-of-line)
-              ("M-p" . org-previous-visible-heading)
-              ("M-n" . org-next-visible-heading)
-              ("<M-up>" . org-metaup)
-              ("<M-down>" . org-metadown)
-              :map org-src-mode-map
-              ("C-x n" . org-edit-src-exit))
+  :mode ("\\.\\(org\\|org_archive\\)\\'" . org-mode)
+  :bind (("C-c a"   . org-agenda)
+         :map org-mode-map
+         ("<M-return>" . org-insert-todo-heading-respect-content)
+         ("<M-S-return>" . org-meta-return)
+         ("M-." . org-open-at-point)  ; So M-. behaves like in source code.
+         ("M-," . org-mark-ring-goto)
+         ("M-;" . org-comment-dwim)
+         ("M-m" . consult-org-heading)
+         ;; Disable adding and removing org-agenda files via keybinding.
+         ("C-c [" . nil)
+         ("C-c ]" . nil)
+         ("\C-c TAB" . nil)  ;; Remove for tempel-expand
+         ("C-a" . org-beginning-of-line)
+         ("M-p" . org-previous-visible-heading)
+         ("M-n" . org-next-visible-heading)
+         ("<M-up>" . org-metaup)
+         ("<M-down>" . org-metadown)
+         :map org-src-mode-map
+         ("C-x n" . org-edit-src-exit))
   :config
   (setq org-auto-align-tags nil
         org-tags-column 0
@@ -966,6 +968,62 @@ created a dedicated process for the project."
         ;; And also don't display ^ or _ as super/subscripts
         org-use-sub-superscripts nil)
   (set-face-attribute 'org-ellipsis nil :inherit 'default :box nil))
+
+(use-package org-clock
+  :bind (("<f7>"    . org-clock-goto)
+         ("C-c o i" . org-clock-in)
+         ("C-c C-x C-j" . org-clock-goto)
+         ("C-c C-x C-i" . org-clock-in)
+         ("C-c C-x C-o" . org-clock-out))
+  :config
+  (setq org-clock-history-length 30)
+
+  ;; Save the running clock and all clock history when exiting Emacs, load it on startup
+  (setq org-clock-persist t)
+  (org-clock-persistence-insinuate)
+
+  ;; Resume clocking task on clock-in if the clock is open
+  (setq org-clock-in-resume t)
+
+  ;; org-clock-display (C-c C-x C-d) shows times for this month by default
+  (setq org-clock-display-default-range 'thismonth)
+
+  ;; Only show the current clocked time in mode line (not all)
+  (setq org-clock-mode-line-total 'current)
+
+  ;; Clocktable (C-c C-x C-r) defaults
+  ;; Use fixed month instead of (current-month) because I want to keep a table for each month
+  (setq org-clock-clocktable-default-properties
+        `(:block ,(format-time-string "%Y-%m") :scope file-with-archives))
+
+  ;; Clocktable (reporting: r) in the agenda
+  (setq org-clocktable-defaults
+        '(:maxlevel 3 :lang "en" :scope file-with-archives
+                    :wstart 1 :mstart 1 :tstart nil :tend nil :step nil :stepskip0 t :fileskip0 t
+                    :tags nil :emphasize nil :link t :narrow 70! :indent t :formula nil :timestamp nil
+                    :level nil :tcolumns nil :formatter nil))
+
+  ;; Resume clocking task on clock-in if the clock is open
+  (setq org-clock-in-resume t)
+  ;; Log all State changes to drawer
+  (setq org-log-into-drawer t)
+  ;; make time editing use discrete minute intervals (no rounding) increments
+  (setq org-time-stamp-rounding-minutes (quote (1 1)))
+  ;; Sometimes I change tasks I'm clocking quickly - this removes clocked tasks with 0:00 duration
+  (setq org-clock-out-remove-zero-time-clocks t)
+  ;; Don't clock out when moving task to a done state
+  (setq org-clock-out-when-done nil)
+
+  ;; Enable auto clock resolution for finding open clocks
+  (setq org-clock-auto-clock-resolution (quote when-no-clock-is-running))
+  ;; Include current clocking task in clock reports
+  (setq org-clock-report-include-clocking-task t))
+
+(use-package ol  ;; org-link
+  :bind (("C-c l" . org-store-link))
+  :config
+  ;; Don't remove links after inserting
+  (setq org-link-keep-stored-after-insertion t))
 
 (use-package org-agenda
   :defer t
