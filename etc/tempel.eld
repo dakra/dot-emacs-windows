@@ -33,6 +33,12 @@ clojure-mode
 
 (prints "(println \"" (p "*" char) (make-string 49 (string-to-char char)) "\")")
 
+java-mode
+
+(main "public static void main(String[] args) {" n> q n> "}")
+(print "System.out.println(\"" p "\");")
+(prints "System.out.println(\"" (p "*" char) (make-string 49 (string-to-char char)) "\");")
+
 sql-mode
 
 (dbsize

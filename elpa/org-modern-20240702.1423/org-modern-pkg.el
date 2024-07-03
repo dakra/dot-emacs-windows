@@ -1,7 +1,7 @@
-(define-package "org-modern" "20240625.452" "Modern looks for Org"
+(define-package "org-modern" "20240702.1423" "Modern looks for Org"
   '((emacs "27.1")
     (compat "29.1.4.4"))
-  :commit "c3c97156ecb45cd666bb0bb9d8e7d08e923cb65e" :authors
+  :commit "5b6b53ecfba6c8da2407b2cfbeeaecab8cf83e26" :authors
   '(("Daniel Mendler" . "mail@daniel-mendler.de"))
   :maintainers
   '(("Daniel Mendler" . "mail@daniel-mendler.de"))

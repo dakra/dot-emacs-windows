@@ -293,6 +293,7 @@
 
 (use-package flycheck
   :hook (((prog-mode
+           conf-mode
            ledger-mode
            systemd-mode
            mu4e-compose-mode
@@ -406,7 +407,7 @@
 
 (use-package lsp-java
   :after lsp-mode
-  :hook (((java-mode java-ts-mode) . lsp-java-boot-lens-mode))
+  :hook (((java-mode java-ts-mode conf-javaprop-mode) . lsp-java-boot-lens-mode))
   :config
   (setq lsp-java-compile-null-analysis-mode "automatic")
   
@@ -605,7 +606,7 @@
   :hook (embark-collect-mode . consult-preview-at-point-mode))
 
 (use-package corfu
-  :hook ((prog-mode . corfu-mode)
+  :hook (((prog-mode conf-mode) . corfu-mode)
          (eshell-mode . corfu-no-auto-mode))
   :bind (:map corfu-map
               ("RET" . nil))

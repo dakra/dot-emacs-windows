@@ -274,7 +274,7 @@ Go to next hunk/change and show it." t)
 Show the VC diff hunk at point.
 The backend is determined by `diff-hl-show-hunk-function'." t)
 (autoload 'diff-hl-show-hunk-mouse-mode "diff-hl-show-hunk" "\
-Enables the margin and fringe to show a posframe/popup with vc diffs when clicked.
+Enable margin and fringe to show a posframe/popup with vc diffs when clicked.
 
 By default, the popup shows only the current hunk, and
 the line of the hunk that matches the current position is
