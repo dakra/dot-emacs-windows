@@ -836,7 +836,7 @@
          ("SPC" . global-gumshoe-backtracking-mode-back)
          ("C-SPC" . global-gumshoe-backtracking-mode-forward))
   :config
-  (setq gumshoe-prefer-same-window t)
+  (setq gumshoe-ignored-major-modes '(fundamental-mode minibuffer-mode treemacs-mode))
   (global-gumshoe-mode))
 
 (use-package proced
