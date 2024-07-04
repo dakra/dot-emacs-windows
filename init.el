@@ -983,7 +983,7 @@ created a dedicated process for the project."
         org-enforce-todo-dependencies t
         org-use-fast-todo-selection t
         org-treat-S-cursor-todo-selection-as-state-change nil
-        org-startup-indented nil  ;; Doesn't play nice with org-modern
+        org-startup-indented t
         ;; Org styling, hide markup etc.
         org-hide-emphasis-markers t
         org-pretty-entities t
@@ -1137,9 +1137,6 @@ created a dedicated process for the project."
   :config
   (setq org-link-keep-stored-after-insertion t))
 
-(use-package org-indent
-  :hook (org-mode . org-indent-mode))
-
 ;; org-link support for magit buffers
 (use-package orgit
   ;; Automatically copy orgit link to last commit after commit
@@ -1164,10 +1161,10 @@ created a dedicated process for the project."
 
 (use-package org-modern-indent
   :load-path "lib/org-modern-indent"
+  :commands (org-modern-indent-mode)
   :defer t
   :init
-  ;; Add late to hook
-  (add-hook 'org-mode-hook #'org-modern-indent-mode))
+  (add-hook 'org-mode-hook #'org-modern-indent-mode 90))
 
 (use-package org-appear
   :hook (org-mode . org-appear-mode)
