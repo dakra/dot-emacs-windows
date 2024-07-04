@@ -4,3 +4,6 @@
 [submodule "lib/eat"]
 	path = lib/eat
 	url = https://codeberg.org/akib/emacs-eat.git
+[submodule "lib/org-modern-indent"]
+	path = lib/org-modern-indent
+	url = https://github.com/jdtsmith/org-modern-indent.git

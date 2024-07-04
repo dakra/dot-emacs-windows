@@ -275,6 +275,25 @@
 (use-package ansi-color
   :hook (compilation-filter . ansi-color-compilation-filter))
 
+(use-package logview
+  :mode ("log.out\\'" . logview-mode)
+  :config
+  (setq logview-additional-timestamp-formats
+        '(("ISO 8601 datetime (with 'T') + millis + 'Z'"
+           (java-pattern . "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+           (datetime-options :any-decimal-separator t)
+           (aliases "yyyy-MM-dd HH:mm:ss.SSS") (aliases "yyyy-MM-dd HH:mm:ss.SSSSSS")
+           (aliases "yyyy-MM-dd'T'HH:mm:ss.SSS") (aliases "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+           (aliases "yyyy-MM-dd'T'HH:mm:ss.SSSSSS") (aliases "HH:mm:ss.SSS")
+           (aliases "HH:mm:ss.SSSSSS"))))
+  (setq logview-additional-submodes
+        '(("Timbre"
+           (format  . "TIMESTAMP LEVEL [NAME] -")
+           (levels  . "SLF4J"))
+          ("Logback4me"
+           (format . "TIMESTAMP [THREAD] {} LEVEL NAME -")
+           (levels . "SLF4J")))))
+
 (use-package eglot
   :defer t
   :config
@@ -410,7 +429,7 @@
   :hook (((java-mode java-ts-mode conf-javaprop-mode) . lsp-java-boot-lens-mode))
   :config
   (setq lsp-java-compile-null-analysis-mode "automatic")
-  
+
   ;; Use Google style formatting by default
   ;; (setq lsp-java-format-settings-url
   ;;      "https://raw.githubusercontent.com/google/styleguide/gh-pages/eclipse-java-google-style.xml")
@@ -425,7 +444,7 @@
           "-Dsun.zip.disableMemoryMapping=true"
           "-Xmx4G"
           "-Xms100m"))
-  
+
   ;; Use 3rd party decompiler
   (setq lsp-java-content-provider-preferred "fernflower"))
 
@@ -885,6 +904,9 @@
   :commands (eat)
   :hook (eshell-load-hook . eat-eshell-visual-command-mode))
 
+(use-package browse-url
+  :bind (("C-c u" . browse-url-at-point)))
+
 (use-package project
   :bind-keymap (("s-p"   . project-prefix-map)  ; projectile-command-map
                 ("C-c p" . project-prefix-map))
@@ -958,6 +980,9 @@ created a dedicated process for the project."
         org-imenu-depth 5
         org-special-ctrl-a/e t
         org-special-ctrl-k t
+        org-enforce-todo-dependencies t
+        org-use-fast-todo-selection t
+        org-treat-S-cursor-todo-selection-as-state-change nil
         org-startup-indented nil  ;; Doesn't play nice with org-modern
         ;; Org styling, hide markup etc.
         org-hide-emphasis-markers t
@@ -967,7 +992,8 @@ created a dedicated process for the project."
         ;; But Don't print "bar" as subscript in "foo_bar"
         org-pretty-entities-include-sub-superscripts nil
         ;; And also don't display ^ or _ as super/subscripts
-        org-use-sub-superscripts nil)
+        org-use-sub-superscripts nil
+        org-default-notes-file (concat org-directory "inbox.org"))
   (set-face-attribute 'org-ellipsis nil :inherit 'default :box nil))
 
 (use-package org-clock
@@ -1029,7 +1055,18 @@ created a dedicated process for the project."
 (use-package org-agenda
   :defer t
   :config
+  ;; Keep tasks with dates/deadlines/scheduled dates/timestamps on the global todo lists
+  (setq org-agenda-todo-ignore-with-date nil
+        org-agenda-todo-ignore-deadlines nil
+        org-agenda-todo-ignore-scheduled nil
+        org-agenda-todo-ignore-timestamp nil
+        ;; Remove completed deadline tasks from the agenda view
+        org-agenda-skip-deadline-if-done t
+        org-extend-today-until 4  ;; For 0 to 4am show yesterday in the agenda view "toady"
+        org-agenda-show-all-dates t)
+
   (setq org-agenda-window-setup 'current-window
+        org-agenda-log-mode-items (quote (closed state clock))
         org-agenda-tags-column 0
         org-agenda-block-separator ?─
         org-agenda-time-grid
@@ -1100,6 +1137,9 @@ created a dedicated process for the project."
   :config
   (setq org-link-keep-stored-after-insertion t))
 
+(use-package org-indent
+  :hook (org-mode . org-indent-mode))
+
 ;; org-link support for magit buffers
 (use-package orgit
   ;; Automatically copy orgit link to last commit after commit
@@ -1121,6 +1161,13 @@ created a dedicated process for the project."
   (setq org-modern-hide-stars nil
         org-modern-star 'replace
         org-modern-replace-stars "❶❷❸❹❺❻❼"))
+
+(use-package org-modern-indent
+  :load-path "lib/org-modern-indent"
+  :defer t
+  :init
+  ;; Add late to hook
+  (add-hook 'org-mode-hook #'org-modern-indent-mode))
 
 (use-package org-appear
   :hook (org-mode . org-appear-mode)
@@ -1313,9 +1360,12 @@ With two `C-u' `C-u' prefix args, add and display current project."
         treemacs-collapse-dirs              5
         treemacs-silent-refresh             nil
         treemacs-is-never-other-window      t)
-  (treemacs-filewatch-mode t)
+
   (treemacs-follow-mode -1)
-  (treemacs-git-mode 'simple))
+  (if (eq system-type 'windows-nt)
+      (treemacs-git-mode -1)  ;; Turn git and filewatch mode off on slow Windows
+    (treemacs-git-mode 'simple)
+    (treemacs-filewatch-mode t)))
 
 ;; Use magit hooks to notify treemacs of git changes
 (use-package treemacs-magit
@@ -1389,7 +1439,7 @@ With two `C-u' `C-u' prefix args, add and display current project."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(magit request lsp-mode smartparens vertico undo-fu-session groovy-mode flycheck dap-mode lsp-java lsp-treemacs lsp-ui eldoc clojure-mode multiple-cursors ob-restclient restclient orgit org-appear diff-hl git-link avy gumshoe markdown-mode tempel ligature moe-theme treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo smart-region rainbow-delimiters org-modern orderless no-littering marginalia embark consult aggressive-indent)))
+   '(logview magit request lsp-mode smartparens vertico undo-fu-session groovy-mode flycheck dap-mode lsp-java lsp-treemacs lsp-ui eldoc clojure-mode multiple-cursors ob-restclient restclient orgit org-appear diff-hl git-link avy gumshoe markdown-mode tempel ligature moe-theme treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo smart-region rainbow-delimiters org-modern orderless no-littering marginalia embark consult aggressive-indent)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
