@@ -886,12 +886,28 @@
   (setq dired-recursive-copies 'always)
   (setq dired-dwim-target t))
 
+(use-package dired-ranger
+  :after dired
+  :init
+  (bind-keys :map dired-mode-map
+             :prefix "c"
+             :prefix-map dired-ranger-map
+             :prefix-docstring "Map for ranger operations."
+             ("c" . dired-ranger-copy)
+             ("p" . dired-ranger-paste)
+             ("m" . dired-ranger-move))
+
+  (bind-keys :map dired-mode-map
+             ("'" . dired-ranger-bookmark)
+             ("`" . dired-ranger-bookmark-visit)))
+
 (use-package eshell
   :bind (("C-x m" . eshell))
   :init
   (setq eshell-aliases-file (no-littering-expand-etc-file-name "eshell-aliases"))
   :config
-  (setq eshell-scroll-to-bottom-on-input 'all
+  (setq eshell-ls-initial-args "-h"
+        eshell-scroll-to-bottom-on-input 'all
         eshell-error-if-no-glob t
         eshell-hist-ignoredups t
         eshell-visual-commands '("ptpython" "ipython" "pshell" "tail" "vi" "vim" "watch"
@@ -1436,7 +1452,7 @@ With two `C-u' `C-u' prefix args, add and display current project."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(logview magit request lsp-mode smartparens vertico undo-fu-session groovy-mode flycheck dap-mode lsp-java lsp-treemacs lsp-ui eldoc clojure-mode multiple-cursors ob-restclient restclient orgit org-appear diff-hl git-link avy gumshoe markdown-mode tempel ligature moe-theme treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo smart-region rainbow-delimiters org-modern orderless no-littering marginalia embark consult aggressive-indent)))
+   '(dired-ranger logview magit request lsp-mode smartparens vertico undo-fu-session groovy-mode flycheck dap-mode lsp-java lsp-treemacs lsp-ui eldoc clojure-mode multiple-cursors ob-restclient restclient orgit org-appear diff-hl git-link avy gumshoe markdown-mode tempel ligature moe-theme treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo smart-region rainbow-delimiters org-modern orderless no-littering marginalia embark consult aggressive-indent)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
