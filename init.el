@@ -275,6 +275,14 @@
 (use-package ansi-color
   :hook (compilation-filter . ansi-color-compilation-filter))
 
+(use-package treesit
+  :defer t
+  :config
+  ;; Download the pre-build grammars from https://github.com/emacs-tree-sitter/tree-sitter-langs/releases
+  ;; Place them in `treesit-extra-load-path' and rename them with a libtree-sitter-<LANG> prefix.
+  (setq treesit-extra-load-path (list (no-littering-expand-var-file-name "tree-sitter-grammars"))))
+
+
 (use-package logview
   :mode ("log.out\\'" . logview-mode)
   :config
@@ -1433,8 +1441,46 @@ With two `C-u' `C-u' prefix args, add and display current project."
   ;; Don't align the body of clojure.core/match with the first argument
   (put-clojure-indent 'match 1))
 
+(use-package json-ts-mode
+  :mode ("\\.json\\'" "\\.avsc\\'"))
+
+(use-package java-ts-mode
+  :mode ("\\.java\\'"))
+
 (use-package groovy-mode
   :defer t)
+
+(use-package yaml-ts-mode
+  :mode ("\\.yaml\\'" "\\.yml\\'")
+  :config
+  ;; Not the perfect outline regexp but better than no folding support
+  (setq outline-regexp "\\([[:space:]]\\{0,2\\}[a-zA-Z_-]+\\):$"))
+
+(use-package toml-mode
+  :mode ("\\.toml\\'" "Cargo.lock\\'"))
+
+(use-package python
+  :mode (("\\.py\\'" . python-ts-mode))
+  :interpreter ("python" . python-ts-mode)
+  :bind (:map python-ts-mode-map
+              ("C-x C-e" . python-shell-send-whole-line-or-region)
+              ("C-c C-c" . python-shell-send-whole-line-or-region)
+              ("C-c C-k" . python-shell-send-buffer)
+              ("C-c C-d" . python-shell-send-defun)
+              :map python-mode-map
+              ("C-x C-e" . python-shell-send-whole-line-or-region)
+              ("C-c C-c" . python-shell-send-whole-line-or-region)
+              ("C-c C-k" . python-shell-send-buffer)
+              ("C-c C-d" . python-shell-send-defun))
+  :config
+  ;; Don't spam message buffer when python-mode can't guess indent-offset
+  (setq python-indent-guess-indent-offset-verbose nil)
+
+  (defun python-shell-send-whole-line-or-region (prefix)
+    "Send whole line or region to inferior Python process."
+    (interactive "*p")
+    (whole-line-or-region-wrap-beg-end 'python-shell-send-region prefix)
+    (deactivate-mark)))
 
 (use-package kubel
   :bind ((:map kubel-mode-map
