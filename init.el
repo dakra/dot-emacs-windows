@@ -242,6 +242,10 @@
   (setq save-place-limit 1000)
   (save-place-mode))
 
+(use-package repeat
+  :unless noninteractive
+  :hook (after-init . repeat-mode))
+
 ;; Savehist: Keep track of minibuffer history
 (use-package savehist
   :unless noninteractive
@@ -997,6 +1001,7 @@ created a dedicated process for the project."
   :config
   (setq org-auto-align-tags nil
         org-tags-column 0
+        org-startup-folded t
         org-fold-catch-invisible-edits 'show-and-error
         org-special-ctrl-a/e t
         org-insert-heading-respect-content t
