@@ -3,7 +3,8 @@
 	url = https://github.com/dakra/moe-theme.el.git
 [submodule "lib/eat"]
 	path = lib/eat
-	url = https://codeberg.org/akib/emacs-eat.git
+	url = https://github.com/dakra/eat.git
+    branch = windows-git-bash
 [submodule "lib/org-modern-indent"]
 	path = lib/org-modern-indent
 	url = https://github.com/jdtsmith/org-modern-indent.git

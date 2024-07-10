@@ -80,6 +80,7 @@
 
   (setq-default indent-tabs-mode nil)  ;; Don't use tabs to indent
   (setq-default tab-width 4)
+
   (setq tab-always-indent 'complete)  ;; smart tab behavior - indent or complete
   (setq require-final-newline t)  ;; Newline at end of file
   (setq mouse-yank-at-point t)  ;; Paste with middle mouse button doesn't move the cursor
@@ -930,7 +931,16 @@
 (use-package eat
   :load-path "lib/eat"
   :commands (eat)
-  :hook (eshell-load-hook . eat-eshell-visual-command-mode))
+  :hook (eshell-load-hook . eat-eshell-visual-command-mode)
+  :bind (:map eat-semi-char-mode-map
+              ("M-i" . windmove-up)
+              ("M-k" . windmove-down)
+              ("M-j" . windmove-left)
+              ("M-l" . windmove-right)
+              ("M-J" . windmove-swap-states-left)
+              ("M-K" . windmove-swap-states-down)
+              ("M-I" . windmove-swap-states-up)
+              ("M-L" . windmove-swap-states-right)))
 
 (use-package browse-url
   :bind (("C-c u" . browse-url-at-point)))
