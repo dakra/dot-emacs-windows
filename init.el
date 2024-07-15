@@ -291,6 +291,7 @@
 (use-package logview
   :mode ("log.out\\'" . logview-mode)
   :config
+  (setq datetime-timezone "Europe/Berlin")
   (setq logview-additional-timestamp-formats
         '(("ISO 8601 datetime (with 'T') + millis + 'Z'"
            (java-pattern . "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
@@ -391,12 +392,14 @@
   (defun lsp-find-definition-other (other?)
     "Like `lsp-find-definition' but open in other window when called with prefix arg."
     (interactive "P")
+    (dogears-remember)
     (if other?
         (lsp-find-definition :display-action 'window)
       (lsp-find-definition)))
   (defun lsp-find-references-other (other?)
     "Like `lsp-find-references' but open in other window when called with prefix arg."
     (interactive "P")
+    (dogears-remember)
     (if other?
         (lsp-find-references :display-action 'window)
       (lsp-find-references)))
@@ -857,19 +860,13 @@
   (setq avy-style 'at-full)
   (setq avy-timeout-seconds 0.2))
 
-(use-package gumshoe
+(use-package dogears
   :defer 1
-  :bind (("C-x SPC" . gumshoe-backtrack)
-         ("C-x C-SPC" . gumshoe-buf-backtrack)
-         ("C-x M-SPC" . global-gumshoe-backtracking-mode-forward)
-         :map global-gumshoe-backtracking-mode-map
-         ("n" . global-gumshoe-backtracking-mode-back)
-         ("p" . global-gumshoe-backtracking-mode-forward)
-         ("SPC" . global-gumshoe-backtracking-mode-back)
-         ("C-SPC" . global-gumshoe-backtracking-mode-forward))
+  :bind (("C-x SPC" . dogears-go)
+         ("C-x C-SPC" . dogears-back)
+         ("C-x M-SPC" . dogears-forward))
   :config
-  (setq gumshoe-ignored-major-modes '(fundamental-mode minibuffer-mode treemacs-mode))
-  (global-gumshoe-mode))
+  (dogears-mode))
 
 (use-package proced
   :bind ("C-x p" . proced)
@@ -1524,7 +1521,7 @@ With two `C-u' `C-u' prefix args, add and display current project."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(ibuffer-project dired-ranger logview magit request lsp-mode smartparens vertico undo-fu-session groovy-mode flycheck dap-mode lsp-java lsp-treemacs lsp-ui eldoc clojure-mode multiple-cursors ob-restclient restclient orgit org-appear diff-hl git-link avy gumshoe markdown-mode tempel ligature moe-theme treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo smart-region rainbow-delimiters org-modern orderless no-littering marginalia embark consult aggressive-indent)))
+   '(dogears ibuffer-project dired-ranger logview magit request lsp-mode smartparens vertico undo-fu-session groovy-mode flycheck dap-mode lsp-java lsp-treemacs lsp-ui eldoc clojure-mode multiple-cursors ob-restclient restclient orgit org-appear diff-hl git-link avy markdown-mode tempel ligature moe-theme treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo smart-region rainbow-delimiters org-modern orderless no-littering marginalia embark consult aggressive-indent)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
