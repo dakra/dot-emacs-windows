@@ -8,3 +8,6 @@
 [submodule "lib/org-modern-indent"]
 	path = lib/org-modern-indent
 	url = https://github.com/jdtsmith/org-modern-indent.git
+[submodule "lib/org"]
+	path = lib/org
+	url = git://git.savannah.gnu.org/emacs/org-mode.git

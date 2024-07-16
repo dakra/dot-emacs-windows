@@ -866,7 +866,14 @@
          ("C-x C-SPC" . dogears-back)
          ("C-x M-SPC" . dogears-forward))
   :config
+  (setq dogears-idle 3)
   (dogears-mode))
+
+(use-package bookmark
+  :defer t
+  :config
+  ;; Hide all the fringe bookmarks as dogears uses bookmarks
+  (setq bookmark-fringe-qmark nil))
 
 (use-package proced
   :bind ("C-x p" . proced)
@@ -916,7 +923,13 @@
   :init
   (setq eshell-aliases-file (no-littering-expand-etc-file-name "eshell-aliases"))
   :config
-  (setq eshell-ls-initial-args "-h"
+  (delete 'eshell-banner eshell-modules-list)
+  (require 'em-tramp)
+  (add-to-list 'eshell-modules-list 'eshell-tramp)
+
+  (require 'em-hist)
+  (setq eshell-history-size 8192
+        eshell-ls-initial-args "-h"
         eshell-scroll-to-bottom-on-input 'all
         eshell-error-if-no-glob t
         eshell-hist-ignoredups t
@@ -937,7 +950,9 @@
               ("M-J" . windmove-swap-states-left)
               ("M-K" . windmove-swap-states-down)
               ("M-I" . windmove-swap-states-up)
-              ("M-L" . windmove-swap-states-right)))
+              ("M-L" . windmove-swap-states-right))
+  :config
+  (setq eat-term-name "xterm-256color"))
 
 (use-package browse-url
   :bind (("C-c u" . browse-url-at-point)))
@@ -996,6 +1011,7 @@ created a dedicated process for the project."
       (ibuffer-do-sort-by-project-file-relative))))
 
 (use-package org
+  :load-path "lib/org"
   :mode ("\\.\\(org\\|org_archive\\)\\'" . org-mode)
   :bind (("C-c a"   . org-agenda)
          :map org-mode-map
@@ -1162,6 +1178,11 @@ created a dedicated process for the project."
      (shell . t)
      (sql . t)
      (sqlite . t))))
+
+(use-package ob-clojure
+  :after ob
+  :config
+  (setq org-babel-clojure-backend 'babashka))
 
 (use-package ob-restclient
   :after ob)
