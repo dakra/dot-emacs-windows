@@ -1010,6 +1010,9 @@ created a dedicated process for the project."
     (unless (eq ibuffer-sorting-mode 'project-file-relative)
       (ibuffer-do-sort-by-project-file-relative))))
 
+(use-package inf-mongo
+  :defer t)
+
 (use-package org
   :load-path "lib/org"
   :mode ("\\.\\(org\\|org_archive\\)\\'" . org-mode)
@@ -1058,6 +1061,15 @@ created a dedicated process for the project."
         org-use-sub-superscripts nil
         org-default-notes-file (concat org-directory "inbox.org"))
   (set-face-attribute 'org-ellipsis nil :inherit 'default :box nil))
+
+(use-package org-duration
+  :defer t
+  :after org
+  :config
+  ;; Never show 'days' in clocksum (e.g. in report clocktable)
+  ;; format string used when creating CLOCKSUM lines and when generating a
+  ;; time duration (avoid showing days)
+  (setq org-duration-format '((special . h:mm))))
 
 (use-package org-clock
   :bind (("<f7>"    . org-clock-goto)
@@ -1185,6 +1197,9 @@ created a dedicated process for the project."
   (setq org-babel-clojure-backend 'babashka))
 
 (use-package ob-restclient
+  :after ob)
+
+(use-package ob-mongo
   :after ob)
 
 (use-package org-src
@@ -1542,7 +1557,7 @@ With two `C-u' `C-u' prefix args, add and display current project."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(dogears ibuffer-project dired-ranger logview magit request lsp-mode smartparens vertico undo-fu-session groovy-mode flycheck dap-mode lsp-java lsp-treemacs lsp-ui eldoc clojure-mode multiple-cursors ob-restclient restclient orgit org-appear diff-hl git-link avy markdown-mode tempel ligature moe-theme treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo smart-region rainbow-delimiters org-modern orderless no-littering marginalia embark consult aggressive-indent)))
+   '(inf-mongo ob-mongo dogears ibuffer-project dired-ranger logview magit request lsp-mode smartparens vertico undo-fu-session groovy-mode flycheck dap-mode lsp-java lsp-treemacs lsp-ui eldoc clojure-mode multiple-cursors ob-restclient restclient orgit org-appear diff-hl git-link avy markdown-mode tempel ligature moe-theme treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo smart-region rainbow-delimiters org-modern orderless no-littering marginalia embark consult aggressive-indent)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
