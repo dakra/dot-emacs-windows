@@ -1014,7 +1014,7 @@ created a dedicated process for the project."
   :defer t)
 
 (use-package org
-  :load-path "lib/org"
+  :load-path "lib/org/lisp"
   :mode ("\\.\\(org\\|org_archive\\)\\'" . org-mode)
   :bind (("C-c a"   . org-agenda)
          :map org-mode-map
@@ -1466,6 +1466,9 @@ With two `C-u' `C-u' prefix args, add and display current project."
     (outline-minor-mode)
     (setq-local outline-regexp "##+")))
 
+(use-package form-feed
+  :hook (((clojure-mode emacs-lisp-mode) . form-feed-mode)))
+
 (use-package elisp-mode
   :bind (:map emacs-lisp-mode-map
               ("C-c C-c" . eval-defun)
@@ -1499,6 +1502,181 @@ With two `C-u' `C-u' prefix args, add and display current project."
 
   ;; Don't align the body of clojure.core/match with the first argument
   (put-clojure-indent 'match 1))
+
+(use-package cider
+  :load-path "lib/cider"
+  :commands (cider-jack-in-babashka cider-connect cider-jack-in)
+  :bind (:map cider-mode-map
+              ("<f6>" . cider-scratch-project)
+              ("M-?" . cider-maybe-clojuredocs)
+              ("C-c C-o" . -cider-find-and-clear-repl-and-result-output)
+              :map cider-repl-mode-map
+              ("M-?" . cider-doc))
+  :config
+  ;; By default prefer clojure-cli build-tool when jacking in
+  (setq cider-preferred-build-tool 'clojure-cli)
+  ;; and set the :dev and :licp alias
+  (setq cider-clojure-cli-aliases ":dev:licp")
+
+  ;; Always reuse a dead REPS without prompt when it's the only option
+  (setq cider-reuse-dead-repls 'auto)
+
+  ;; Only show cider eval results as overlay and not in the minibuffer
+  (setq cider-use-overlays t)
+
+  ;; Use `moon' spinner that looks nice and doesn't take as much space as the progress bar
+  (setq cider-eval-spinner-type 'moon)
+
+  ;; Store more items in repl history (default 500)
+  (setq cider-repl-history-size 2000)
+  ;; When loading the buffer (C-c C-k) save first without asking
+  (setq cider-save-file-on-load t)
+  ;; Don't show cider help text in repl after jack-in
+  (setq cider-repl-display-help-banner nil)
+  ;; Don't focus repl after sending somehint to there from another buffer
+  (setq cider-switch-to-repl-on-insert nil)
+  ;; Eval automatically when insreting in the repl (e..g. C-c C-j d/e) (unless called with prefix)
+  (setq cider-invert-insert-eval-p t)
+  ;; Show error as overlay instead of the buffer (buffer is generated anyway in case it's needed)
+  (setq cider-show-error-buffer 'except-in-repl)
+  ;; If we set `cider-show-error-buffer' to non-nil,
+  ;; don't focus error buffer when error is thrown
+  (setq cider-auto-select-error-buffer nil)
+  ;; Don't focus inspector after evaluating something
+  (setq cider-inspector-auto-select-buffer nil)
+  ;; Don't show tooltip with mouse hover
+  (setq cider-use-tooltips nil)
+  ;; Display context dependent info in the eldoc where possible.
+  (setq cider-eldoc-display-context-dependent-info t)
+  ;; Don't pop to the REPL buffer on connect
+  ;; Create and display the buffer, but don't focus it.
+  (setq cider-repl-pop-to-buffer-on-connect 'display-only)
+  ;; Just use symbol under point and don't prompt for symbol in e.g. cider-doc.
+  (setq cider-prompt-for-symbol nil)
+  
+  ;; I basically never connect to a remote host nrepl, so skip the host question on connect
+  (defun cider--completing-read-host (hosts)
+    '("localhost"))
+
+  ;; Display cider-scratch buffer in the same window
+  (add-to-list
+   'display-buffer-alist
+   '("*cider-scratch.*" (display-buffer-reuse-window
+                         display-buffer-same-window)))
+
+  (setq cider-scratch-initial-message
+        "(ns scratch
+  (:require [clojure.java.io :as io]
+            [clojure.pprint :as pprint]
+            [clojure.set :as set]
+            [clojure.string :as str]))
+")
+
+  ;; Output to the cider-result buffer
+  ;; This needs my personal WIP fork: https://github.com/dakra/cider/tree/wip
+  ;; (setq cider-interactive-eval-output-destination 'cider-result-buffer)
+
+  (defun -cider-find-and-clear-repl-and-result-output (&optional clear-repl)
+    "Like `cider-find-and-clear-repl-output' but additionally clear
+the *cider-result* buffer."
+    (interactive "P")
+    (cider-find-and-clear-repl-output clear-repl)
+    (let ((buf (get-buffer cider-result-buffer)))
+      (when (and buf (> (buffer-size buf) 0))  ;; Only clear when buffer exists and is not empty
+        (save-excursion
+          (with-current-buffer buf
+            (let ((inhibit-read-only t))
+              (if clear-repl  ;; Remove all output when called with prefix
+                  (delete-region (point-min) (point-max))
+
+                ;; Only remove output of the "cell" where the cursor currently is
+                (goto-char (or (search-backward "\f" nil t) (point-min))) ;; Search the beginning
+                (forward-sexp)  ;; Skip input sexp
+                (forward-line 2)  ;; Skip the =*ns* <buffer>:line-ns=> info arrow
+                (beginning-of-line)
+                (let ((start (point)))
+                  (search-forward "\f" nil t)
+                  (backward-char)
+                  (delete-region start (point)))
+                (insert-before-markers
+                 (propertize ";; output cleared\n" 'font-lock-face 'font-lock-comment-face)))))))))
+
+  (defun cider-maybe-clojuredocs (&optional arg)
+    "Like `cider-doc' but call `cider-clojuredocs' when invoked with prefix arg in `clojure-mode'."
+    (interactive "P")
+    (if (and arg (or (eq major-mode 'clojure-mode)
+                     (eq major-mode 'clojurec-mode)
+                     (eq major-mode 'cider-clojure-interaction-mode)))
+        (cider-clojuredocs)
+      (cider-doc)))
+
+  (require 's)
+  (defmacro -cider-check-alias-fn (alias)
+    "Return predicate function that check if cider contains alias string ALIAS."
+    `(lambda (&rest _)
+       (or
+        (and cider-clojure-cli-aliases
+             (s-contains? ,alias cider-clojure-cli-aliases))
+        (and cider-clojure-cli-global-options
+             (s-contains? ,alias cider-clojure-cli-global-options)))))
+
+  ;; Inject flow-storm middleware in cider-jack-in when the `:flow-storm' alias is set
+  (add-to-list 'cider-jack-in-nrepl-middlewares
+               `("flow-storm.nrepl.middleware/wrap-flow-storm" :predicate ,(-cider-check-alias-fn ":flow-storm")))
+
+  ;; Inject portal middleware in cider-jack-in when the `:portal' alias is set
+  (add-to-list 'cider-jack-in-nrepl-middlewares
+               `("portal.nrepl/wrap-portal" :predicate ,(-cider-check-alias-fn ":portal")))
+
+  ;; Inject reveal middleware in cider-jack-in when the `:reveal' alias is set
+  (add-to-list 'cider-jack-in-nrepl-middlewares
+               `("vlaaad.reveal.nrepl/middleware" :predicate ,(-cider-check-alias-fn ":reveal")))
+
+  ;; Inject shadowcljs nrepl middleware in cider-jack-in when the `:cljs' alias is set
+  (add-to-list 'cider-jack-in-nrepl-middlewares
+               `("shadow.cljs.devtools.server.nrepl/middleware" :predicate ,(-cider-check-alias-fn ":cljs")))
+
+  ;; Update classpath without restarting the repl
+  ;; Requires lambdaisland.classpath which is under :licp alias in my global deps.edn
+  (defun cider-update-deps-classpath ()
+    "Update classpath from deps.edn with lambdaisland.classpath."
+    (interactive)
+    ;; FIXME: Catch cider error and just display `user-error' when licp not found
+    (cider-interactive-eval "(require 'lambdaisland.classpath)")
+    (let* ((deps-path (concat (project-root (project-current t)) "deps.edn"))
+           (deps-str (with-temp-buffer
+                       (insert-file-contents deps-path)
+                       (buffer-string))))
+      (cider-interactive-eval
+       (concat "(lambdaisland.classpath/update-classpath! '{:extra " deps-str "})"))))
+
+  ;; jack-in for babashka
+  ;; Code mostly from corgi: https://github.com/lambdaisland/corgi-packages/blob/main/corgi-clojure/corgi-clojure.el#L192-L211
+  (defun cider-jack-in-babashka (&optional project-dir)
+    "Start a utility CIDER REPL backed by Babashka, not related to a specific project."
+    (interactive)
+    (let ((project-dir (or project-dir (project-root (project-current t)))))
+      (nrepl-start-server-process
+       project-dir
+       "bb --nrepl-server 0"
+       (lambda (server-buffer)
+         (cider-nrepl-connect
+          (list :repl-buffer server-buffer
+                :repl-type 'clj
+                :host (plist-get nrepl-endpoint :host)
+                :port (plist-get nrepl-endpoint :port)
+                :project-dir project-dir
+                :session-name "babashka"
+                :repl-init-function (lambda ()
+                                      (setq-local cljr-suppress-no-project-warning t
+                                                  cljr-suppress-middleware-warnings t)
+                                      (rename-buffer "*babashka-repl*")))))))))
+
+(use-package nrepl-client
+  :config
+  ;; Give sync requests a bit more time to respond (default 10s)
+  ;; Especially when using with ejc-sql and e.g. Athena queries
+  (setq nrepl-sync-request-timeout 90))
 
 (use-package json-ts-mode
   :mode ("\\.json\\'" "\\.avsc\\'"))
@@ -1557,7 +1735,7 @@ With two `C-u' `C-u' prefix args, add and display current project."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(inf-mongo ob-mongo dogears ibuffer-project dired-ranger logview magit request lsp-mode smartparens vertico undo-fu-session groovy-mode flycheck dap-mode lsp-java lsp-treemacs lsp-ui eldoc clojure-mode multiple-cursors ob-restclient restclient orgit org-appear diff-hl git-link avy markdown-mode tempel ligature moe-theme treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo smart-region rainbow-delimiters org-modern orderless no-littering marginalia embark consult aggressive-indent)))
+   '(form-feed inf-mongo ob-mongo dogears ibuffer-project dired-ranger logview magit request lsp-mode smartparens vertico undo-fu-session groovy-mode flycheck dap-mode lsp-java lsp-treemacs lsp-ui eldoc clojure-mode multiple-cursors ob-restclient restclient orgit org-appear diff-hl git-link avy markdown-mode tempel ligature moe-theme treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo smart-region rainbow-delimiters org-modern orderless no-littering marginalia embark consult aggressive-indent)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

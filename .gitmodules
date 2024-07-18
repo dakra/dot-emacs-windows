@@ -1,6 +1,7 @@
 [submodule "moe-theme"]
 	path = lib/moe-theme
 	url = https://github.com/dakra/moe-theme.el.git
+    branch = dev-dmacs
 [submodule "lib/eat"]
 	path = lib/eat
 	url = https://github.com/dakra/eat.git
@@ -11,3 +12,7 @@
 [submodule "lib/org"]
 	path = lib/org
 	url = git://git.savannah.gnu.org/emacs/org-mode.git
+[submodule "lib/cider"]
+	path = lib/cider
+	url = https://github.com/dakra/cider.git
+    branch = wip
