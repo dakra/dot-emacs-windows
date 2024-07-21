@@ -1010,6 +1010,55 @@ created a dedicated process for the project."
     (unless (eq ibuffer-sorting-mode 'project-file-relative)
       (ibuffer-do-sort-by-project-file-relative))))
 
+(use-package edit-indirect
+  :bind (("C-c '" . edit-indirect-dwim)
+         :map edit-indirect-mode-map
+         ("C-x n" . edit-indirect-commit))
+  :config
+  (defvar edit-indirect-string nil)
+  (put 'edit-indirect-string 'end-op
+       (lambda ()
+         (while (nth 3 (syntax-ppss))
+           (forward-char))
+         (backward-char)))
+  (put 'edit-indirect-string 'beginning-op
+       (lambda ()
+         (let ((forward (nth 3 (syntax-ppss))))
+           (while (nth 3 (syntax-ppss))
+             (backward-char))
+           (when forward
+             (forward-char)))))
+
+  (defun edit-indirect-dwim (beg end &optional display-buffer)
+    "DWIM version of edit-indirect-region.
+When region is selected, behave like `edit-indirect-region'
+but when no region is selected and the cursor is in a 'string' syntax
+mark the string and call `edit-indirect-region' with it."
+    (interactive
+     (if (or (use-region-p) (not transient-mark-mode))
+         (prog1 (list (region-beginning) (region-end) t)
+           (deactivate-mark))
+       (if (nth 3 (syntax-ppss))
+           (list (beginning-of-thing 'edit-indirect-string)
+                 (end-of-thing 'edit-indirect-string)
+                 t)
+         (user-error "No region marked and not inside a string."))))
+    (edit-indirect-region beg end display-buffer))
+
+  (defvar edit-indirect-guess-mode-history nil)
+  (defun edit-indirect-guess-mode-fn (_buffer _beg _end)
+    (let* ((lang (completing-read "Mode: "
+                                  '("gfm" "rst"
+                                    "emacs-lisp" "clojure" "python" "sql"
+                                    "typescript" "js2" "web" "scss")
+                                  nil nil nil 'edit-indirect-guess-mode-history))
+           (mode-str (concat lang "-mode"))
+           (mode (intern mode-str)))
+      (unless (functionp mode)
+        (error "Invalid mode `%s'" mode-str))
+      (funcall mode)))
+  (setq edit-indirect-guess-mode-function #'edit-indirect-guess-mode-fn))
+
 (use-package inf-mongo
   :defer t)
 
@@ -1059,7 +1108,10 @@ created a dedicated process for the project."
         org-pretty-entities-include-sub-superscripts nil
         ;; And also don't display ^ or _ as super/subscripts
         org-use-sub-superscripts nil
-        org-default-notes-file (concat org-directory "inbox.org"))
+        org-default-notes-file (concat org-directory "inbox.org")
+        org-todo-keywords '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d)")
+                            (sequence "WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)" "MEETING")))
+
   (set-face-attribute 'org-ellipsis nil :inherit 'default :box nil))
 
 (use-package org-duration
@@ -1240,7 +1292,15 @@ created a dedicated process for the project."
   :config
   (setq org-modern-hide-stars nil
         org-modern-star 'replace
-        org-modern-replace-stars "❶❷❸❹❺❻❼"))
+        org-modern-replace-stars "❶❷❸❹❺❻❼"
+        ;; Set todo colors from moe-theme
+        org-modern-todo-faces '(("TODO" :background "#5f0000" :weight bold)  ;; red-4
+                                ("NEXT" :background "#0000af" :weight bold)  ;; blue-5
+                                ("DONE" :background "#005f00" :weight bold)  ;; green-5
+                                ("WAITING" :background "#af5f00" :weight bold)  ;; orange-5
+                                ("HOLD" :background "#ff2f9b" :weight bold)  ;; magenta-00
+                                ("CANCELLED" :background "#005f00" :weight bold)  ;; green-5
+                                ("MEETING" :background "#875f00" :weight bold))))   ;; yellow-4
 
 (use-package org-modern-indent
   :load-path "lib/org-modern-indent"
@@ -1553,7 +1613,7 @@ With two `C-u' `C-u' prefix args, add and display current project."
   (setq cider-repl-pop-to-buffer-on-connect 'display-only)
   ;; Just use symbol under point and don't prompt for symbol in e.g. cider-doc.
   (setq cider-prompt-for-symbol nil)
-  
+
   ;; I basically never connect to a remote host nrepl, so skip the host question on connect
   (defun cider--completing-read-host (hosts)
     '("localhost"))
@@ -1735,7 +1795,7 @@ the *cider-result* buffer."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(form-feed inf-mongo ob-mongo dogears ibuffer-project dired-ranger logview magit request lsp-mode smartparens vertico undo-fu-session groovy-mode flycheck dap-mode lsp-java lsp-treemacs lsp-ui eldoc clojure-mode multiple-cursors ob-restclient restclient orgit org-appear diff-hl git-link avy markdown-mode tempel ligature moe-theme treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo smart-region rainbow-delimiters org-modern orderless no-littering marginalia embark consult aggressive-indent)))
+   '(edit-indirect form-feed inf-mongo ob-mongo dogears ibuffer-project dired-ranger logview magit request lsp-mode smartparens vertico undo-fu-session groovy-mode flycheck dap-mode lsp-java lsp-treemacs lsp-ui eldoc clojure-mode multiple-cursors ob-restclient restclient orgit org-appear diff-hl git-link avy markdown-mode tempel ligature moe-theme treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo smart-region rainbow-delimiters org-modern orderless no-littering marginalia embark consult aggressive-indent)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
