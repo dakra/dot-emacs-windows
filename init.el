@@ -793,6 +793,19 @@
     (interactive "*p")
     (whole-line-or-region-wrap-beg-end 'sp-kill-region prefix))
 
+  ;; Create keybindings to wrap symbol/region in pairs (from prelude)
+  (defun prelude-wrap-with (s)
+    "Create a wrapper function for smartparens using S."
+    `(lambda (&optional arg)
+       (interactive "P")
+       (sp-wrap-with-pair ,s)))
+  (define-key prog-mode-map (kbd "M-(") (prelude-wrap-with "("))
+  (define-key prog-mode-map (kbd "M-[") (prelude-wrap-with "["))
+  (define-key prog-mode-map (kbd "M-{") (prelude-wrap-with "{"))
+  (define-key prog-mode-map (kbd "M-\"") (prelude-wrap-with "\""))
+  (define-key prog-mode-map (kbd "M-'") (prelude-wrap-with "'"))
+  (define-key prog-mode-map (kbd "M-`") (prelude-wrap-with "`"))
+
   ;; Don't include semicolon ; when slurping
   (add-to-list 'sp-sexp-suffix '(java-mode regexp ""))
   (add-to-list 'sp-sexp-suffix '(java-ts-mode regexp "")))
@@ -1538,7 +1551,12 @@ With two `C-u' `C-u' prefix args, add and display current project."
     (setq-local outline-regexp "##+")))
 
 (use-package form-feed
-  :hook (((clojure-mode emacs-lisp-mode) . form-feed-mode)))
+  :hook (prog-mode . form-feed-mode)
+  :config
+  (add-to-list 'form-feed--font-lock-keywords
+               `(,(concat comment-start "============+") 0 form-feed--font-lock-face t))
+  (add-to-list 'form-feed--font-lock-keywords
+               `(,(concat comment-start "------------+") 0 form-feed--font-lock-face t)))
 
 (use-package elisp-mode
   :bind (:map emacs-lisp-mode-map
@@ -1790,6 +1808,28 @@ the *cider-result* buffer."
     (whole-line-or-region-wrap-beg-end 'python-shell-send-region prefix)
     (deactivate-mark)))
 
+(use-package web-mode
+  :config
+  ;; Expand e.g. s/ to <span>|</span>
+  (setq web-mode-enable-auto-expanding t)
+  ;; Enable current element highlight
+  (setq web-mode-enable-current-element-highlight t)
+  ;; Show column for current element
+  ;; Like highlight-indent-guide but only one line for current element
+  (setq web-mode-enable-current-column-highlight t)
+
+  ;; Don't indent directly after a <script> or <style> tag
+  (setq web-mode-script-padding 0)
+  (setq web-mode-style-padding 0)
+
+  ;; Set default indent to 2 spaces
+  (setq web-mode-markup-indent-offset 2)
+  (setq web-mode-css-indent-offset 2)
+  (setq web-mode-code-indent-offset 2)
+  ;; auto close tags in web-mode
+  (setq web-mode-enable-auto-closiqng t))
+
+
 (use-package kubel
   :bind ((:map kubel-mode-map
                ("N" . kubel-set-namespace)
@@ -1806,7 +1846,7 @@ the *cider-result* buffer."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(csv-mode edit-indirect form-feed inf-mongo ob-mongo dogears ibuffer-project dired-ranger logview magit request lsp-mode smartparens vertico undo-fu-session groovy-mode flycheck dap-mode lsp-java lsp-treemacs lsp-ui eldoc clojure-mode multiple-cursors ob-restclient restclient orgit org-appear diff-hl git-link avy markdown-mode tempel ligature moe-theme treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo smart-region rainbow-delimiters org-modern orderless no-littering marginalia embark consult aggressive-indent)))
+   '(web-mode csv-mode edit-indirect form-feed inf-mongo ob-mongo dogears ibuffer-project dired-ranger logview magit request lsp-mode smartparens vertico undo-fu-session groovy-mode flycheck dap-mode lsp-java lsp-treemacs lsp-ui eldoc clojure-mode multiple-cursors ob-restclient restclient orgit org-appear diff-hl git-link avy markdown-mode tempel ligature moe-theme treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo smart-region rainbow-delimiters org-modern orderless no-littering marginalia embark consult aggressive-indent)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
