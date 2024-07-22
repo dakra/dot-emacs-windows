@@ -287,6 +287,17 @@
   ;; Place them in `treesit-extra-load-path' and rename them with a libtree-sitter-<LANG> prefix.
   (setq treesit-extra-load-path (list (no-littering-expand-var-file-name "tree-sitter-grammars"))))
 
+(use-package csv-mode
+  :hook ((csv-mode . csv-align-mode)
+         (csv-mode . csv-header-line))
+  :init
+  ;; Don't font-lock as comment when there's a `##'
+  ;; string somewhere inside a CSV line.
+  (setq csv-comment-start-default nil)
+  ;; Add more separators.
+  ;; This variable has to be set *before*
+  ;; loading csv-mode (i.e. the use-pacakge :init block)
+  (setq csv-separators '("," "	" ";" "|")))
 
 (use-package logview
   :mode ("log.out\\'" . logview-mode)
@@ -1795,7 +1806,7 @@ the *cider-result* buffer."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(edit-indirect form-feed inf-mongo ob-mongo dogears ibuffer-project dired-ranger logview magit request lsp-mode smartparens vertico undo-fu-session groovy-mode flycheck dap-mode lsp-java lsp-treemacs lsp-ui eldoc clojure-mode multiple-cursors ob-restclient restclient orgit org-appear diff-hl git-link avy markdown-mode tempel ligature moe-theme treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo smart-region rainbow-delimiters org-modern orderless no-littering marginalia embark consult aggressive-indent)))
+   '(csv-mode edit-indirect form-feed inf-mongo ob-mongo dogears ibuffer-project dired-ranger logview magit request lsp-mode smartparens vertico undo-fu-session groovy-mode flycheck dap-mode lsp-java lsp-treemacs lsp-ui eldoc clojure-mode multiple-cursors ob-restclient restclient orgit org-appear diff-hl git-link avy markdown-mode tempel ligature moe-theme treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo smart-region rainbow-delimiters org-modern orderless no-littering marginalia embark consult aggressive-indent)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
