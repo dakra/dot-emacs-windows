@@ -16,3 +16,7 @@
 	path = lib/cider
 	url = https://github.com/dakra/cider.git
     branch = wip
+[submodule "lib/clj-refactor"]
+	path = lib/clj-refactor
+	url = https://github.com/dakra/clj-refactor.el.git
+    branch = no-yas-no-hydra

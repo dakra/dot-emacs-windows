@@ -486,7 +486,7 @@
               ([f11]   . dap-step-in)
               ([S-f11] . dap-step-out))
   :config
-  (setq dap-auto-configure-features '(sessions locals controls tooltip))
+  (setq dap-auto-configure-features '(sessions locals breakpoints expressions repl tooltip))
   (dap-auto-configure-mode))
 
 (use-package dap-java
@@ -1770,6 +1770,29 @@ the *cider-result* buffer."
   ;; Especially when using with ejc-sql and e.g. Athena queries
   (setq nrepl-sync-request-timeout 90))
 
+(use-package clj-refactor
+  :load-path "lib/clj-refactor"
+  :hook (clojure-mode . clj-refactor-mode)
+  :commands (clj-refactor-mode)
+  :config
+  ;; Allow a few more chars each row in namespace (default 72)
+  (setq cljr-print-right-margin 90)
+
+  (dolist (magic-require '(("aero"     . "aero.core")
+                           ("clerk"    . "nextjournal.clerk")
+                           ("csv"      . "clojure.data.csv")
+                           ("edn"      . "clojure.edn")
+                           ("http"     . "babashka.http-client")
+                           ("jdbc"     . "next.jdbc")
+                           ("transit"  . "cognitect.transit")
+                           ("walk"     . "clojure.walk")
+                           ("pprint"   . "clojure.pprint")
+                           ("http"     . "babashka.http-client")
+                           ("reagent"  . "reagent.core")
+                           ("re-frame" . "re-frame.core")
+                           ("tick"     . "tick.core")))
+    (add-to-list 'cljr-magic-require-namespaces magic-require)))
+
 (use-package json-ts-mode
   :mode ("\\.json\\'" "\\.avsc\\'"))
 
@@ -1852,7 +1875,7 @@ the *cider-result* buffer."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(web-mode csv-mode edit-indirect form-feed inf-mongo ob-mongo dogears ibuffer-project dired-ranger logview magit request lsp-mode smartparens vertico undo-fu-session groovy-mode flycheck dap-mode lsp-java lsp-treemacs lsp-ui eldoc clojure-mode multiple-cursors ob-restclient restclient orgit org-appear diff-hl git-link avy markdown-mode tempel ligature moe-theme treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo smart-region rainbow-delimiters org-modern orderless no-littering marginalia embark consult aggressive-indent)))
+   '(git-modes inflections paredit web-mode csv-mode edit-indirect form-feed inf-mongo ob-mongo dogears ibuffer-project dired-ranger logview magit request lsp-mode smartparens vertico undo-fu-session groovy-mode flycheck dap-mode lsp-java lsp-treemacs lsp-ui eldoc clojure-mode multiple-cursors ob-restclient restclient orgit org-appear diff-hl git-link avy markdown-mode tempel ligature moe-theme treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo smart-region rainbow-delimiters org-modern orderless no-littering marginalia embark consult aggressive-indent)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
