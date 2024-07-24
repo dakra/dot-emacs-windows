@@ -1,7 +1,7 @@
-(define-package "tempel" "20240718.1001" "Tempo templates/snippets with in-buffer field editing"
+(define-package "tempel" "20240723.2206" "Tempo templates/snippets with in-buffer field editing"
   '((emacs "27.1")
     (compat "30"))
-  :commit "ddb76125dc8eb981f958b1ac5c68f99687fc79d0" :authors
+  :commit "317c0e41d542721db11a7a8a1c6b78762959259b" :authors
   '(("Daniel Mendler" . "mail@daniel-mendler.de"))
   :maintainers
   '(("Daniel Mendler" . "mail@daniel-mendler.de"))

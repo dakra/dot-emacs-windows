@@ -1551,12 +1551,15 @@ With two `C-u' `C-u' prefix args, add and display current project."
     (setq-local outline-regexp "##+")))
 
 (use-package form-feed
-  :hook (prog-mode . form-feed-mode)
+  :hook (prog-mode . form-feed-init)
   :config
-  (add-to-list 'form-feed--font-lock-keywords
-               `(,(concat comment-start "============+") 0 form-feed--font-lock-face t))
-  (add-to-list 'form-feed--font-lock-keywords
-               `(,(concat comment-start "------------+") 0 form-feed--font-lock-face t)))
+  (defun form-feed-init ()
+    (make-local-variable 'form-feed--font-lock-keywords)
+    (add-to-list 'form-feed--font-lock-keywords
+                 `(,(concat comment-start-skip "=\\{40,\\}") 0 form-feed--font-lock-face t))
+    (add-to-list 'form-feed--font-lock-keywords
+                 `(,(concat comment-start-skip "-\\{40,\\}") 0 form-feed--font-lock-face t))
+    (form-feed-mode)))
 
 (use-package elisp-mode
   :bind (:map emacs-lisp-mode-map
@@ -1809,6 +1812,9 @@ the *cider-result* buffer."
     (deactivate-mark)))
 
 (use-package web-mode
+  :mode ("\\.phtml\\'" "\\.tpl\\.php\\'" "\\.tpl\\'" "\\.blade\\.php\\'" "\\.jsp\\'" "\\.as[cp]x\\'"
+         "\\.erb\\'" "\\.html.?\\'" "/\\(views\\|html\\|theme\\|templates\\)/.*\\.php\\'"
+         "\\.jinja2?\\'" "\\.mako\\'" "\\.vue\\'" "_template\\.txt" "\\.ftl\\'")
   :config
   ;; Expand e.g. s/ to <span>|</span>
   (setq web-mode-enable-auto-expanding t)

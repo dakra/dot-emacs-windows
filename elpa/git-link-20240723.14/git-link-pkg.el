@@ -1,6 +1,6 @@
-(define-package "git-link" "20240630.626" "Get the GitHub/Bitbucket/GitLab URL for a buffer location"
+(define-package "git-link" "20240723.14" "Get the GitHub/Bitbucket/GitLab URL for a buffer location"
   '((emacs "24.3"))
-  :commit "f66d1f3cdc2c99a2a5c193a6e2521118807f59e8" :authors
+  :commit "db586e906a926785bbf960f3714d70dc11b019b9" :authors
   '(("Skye Shaw" . "skye.shaw@gmail.com"))
   :maintainers
   '(("Skye Shaw" . "skye.shaw@gmail.com"))

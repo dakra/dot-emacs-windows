@@ -599,7 +599,7 @@ return (FILENAME . REVISION) otherwise nil."
                                 (format "L%s-L%s" start end)
                               (format "L%s" start)))))))
 
-(defun git-link-googlesource (hostname dirname filename branch commit start end)
+(defun git-link-googlesource (hostname dirname filename branch commit start _end)
   (format "https://%s/%s/+/%s/%s"
 	  hostname
 	  dirname
@@ -784,6 +784,9 @@ return (FILENAME . REVISION) otherwise nil."
 
 (define-obsolete-function-alias
   'git-link-homepage-svannah 'git-link-homepage-savannah "cf947f9")
+
+(defalias 'git-link-gitea 'git-link-codeberg)
+(defalias 'git-link-commit-gitea 'git-link-commit-codeberg)
 
 (defun git-link--select-remote ()
   (if (equal '(4) current-prefix-arg)
