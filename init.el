@@ -897,7 +897,7 @@
   :defer t
   :config
   ;; Hide all the fringe bookmarks as dogears uses bookmarks
-  (setq bookmark-fringe-qmark nil))
+  (setq bookmark-fringe-mark nil))
 
 (use-package proced
   :bind ("C-x p" . proced)
