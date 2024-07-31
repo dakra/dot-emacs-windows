@@ -1133,8 +1133,17 @@ mark the string and call `edit-indirect-region' with it."
         ;; And also don't display ^ or _ as super/subscripts
         org-use-sub-superscripts nil
         org-default-notes-file (concat org-directory "inbox.org")
+        ;; Set todo colors from moe-theme
+        org-todo-keyword-faces '(("TODO" :foreground "#5f0000" :weight bold)  ;; red-4
+                                 ("NEXT" :foreground "#0000af" :weight bold)  ;; blue-5
+                                 ("DONE" :foreground "#005f00" :weight bold)  ;; green-5
+                                 ("WAITING" :foreground "#af5f00" :weight bold)  ;; orange-5
+                                 ("HOLD" :foreground "#ff2f9b" :weight bold)  ;; magenta-00
+                                 ("CANCELLED" :foreground "#005f00" :weight bold)  ;; green-5
+                                 ("MEETING" :foreground "#875f00" :weight bold))  ;; yellow-4
         org-todo-keywords '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d)")
-                            (sequence "WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)" "MEETING")))
+                            (sequence "WAITING(w@/!)" "HOLD(h@/!)" "|"
+                                      "CANCELLED(c@/!)" "MEETING")))
 
   (set-face-attribute 'org-ellipsis nil :inherit 'default :box nil))
 
@@ -1324,7 +1333,7 @@ mark the string and call `edit-indirect-region' with it."
                                 ("WAITING" :background "#af5f00" :weight bold)  ;; orange-5
                                 ("HOLD" :background "#ff2f9b" :weight bold)  ;; magenta-00
                                 ("CANCELLED" :background "#005f00" :weight bold)  ;; green-5
-                                ("MEETING" :background "#875f00" :weight bold))))   ;; yellow-4
+                                ("MEETING" :background "#875f00" :weight bold))))  ;; yellow-4
 
 (use-package org-modern-indent
   :load-path "lib/org-modern-indent"
@@ -1476,7 +1485,7 @@ mark the string and call `edit-indirect-region' with it."
         git-link-open-in-browser t))
 
 (use-package treemacs
-  :bind (([f8] . treemacs-toggle-or-select)
+  :bind (([f8] . treemacs-select-window)
          :map treemacs-mode-map
          ("M-l" . nil)  ;; We bind `M-l' to `windmove-right'
          ("C-t a" . treemacs-add-project-to-workspace)
@@ -1486,30 +1495,6 @@ mark the string and call `edit-indirect-region' with it."
          ;; a frame to a different project and toggle treemacs again we still get the old project
          ("q" . treemacs-kill-buffer))
   :config
-  (defun treemacs-toggle-or-select (&optional arg)
-    "Initialize or toggle treemacs.
-- If the treemacs window is visible and selected, hide it.
-- If the treemacs window is visible select it with cursor on current file.
-- If a treemacs buffer exists, but is not visible show it.
-- If no treemacs buffer exists for the current frame create and show it.
-- If the workspace is empty additionally ask for the root path of the first
-  project to add.
-
-With one `C-u' prefix argument, display current project exclusively.
-With two `C-u' `C-u' prefix args, add and display current project."
-    (interactive "p")
-    (cond ((or (not arg) (eq arg 1))
-           (pcase (treemacs-current-visibility)
-             ('visible (if (string-prefix-p treemacs--buffer-name-prefix (buffer-name))
-                           (delete-window (treemacs-get-local-window))
-                         (when (buffer-file-name)
-                           (treemacs-find-file))
-                         (treemacs--select-visible-window)))
-             ('exists  (treemacs-select-window))
-             ('none    (treemacs--init))))
-          ((eq arg 4) (treemacs-add-and-display-current-project-exclusively))
-          ((eq arg 16) (treemacs-add-and-display-current-project))))
-
   (defun treemacs-ignore-python-files (file _)
     (or (s-ends-with-p ".pyc" file)
         (string= file "__pycache__")))
@@ -1521,9 +1506,7 @@ With two `C-u' `C-u' prefix args, add and display current project."
   (setq treemacs-follow-after-init          t
         treemacs-indentation                1
         treemacs-width                      30
-        treemacs-collapse-dirs              5
-        treemacs-silent-refresh             nil
-        treemacs-is-never-other-window      t)
+        treemacs-collapse-dirs              5)
 
   (treemacs-follow-mode -1)
   (if (eq system-type 'windows-nt)
@@ -1537,7 +1520,8 @@ With two `C-u' `C-u' prefix args, add and display current project."
 
 (use-package treemacs-icons-dired
   :after dired
-  :config (treemacs-icons-dired-mode))
+  :config
+  (treemacs-icons-dired-mode))
 
 (use-package restclient
   :mode ("\\.rest\\'" . restclient-mode)
