@@ -302,7 +302,7 @@
 (use-package logview
   :mode ("log.out\\'" . logview-mode)
   :config
-  (setq datetime-timezone "Europe/Berlin")
+  (setq datetime-timezone 'Europe/Berlin)
   (setq logview-additional-timestamp-formats
         '(("ISO 8601 datetime (with 'T') + millis + 'Z'"
            (java-pattern . "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
