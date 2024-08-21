@@ -1109,8 +1109,8 @@ mark the string and call `edit-indirect-region' with it."
          :map org-src-mode-map
          ("C-x n" . org-edit-src-exit))
   :config
-  (setq org-auto-align-tags nil
-        org-tags-column 0
+  (setq org-auto-align-tags t
+        org-tags-column -105
         org-startup-folded t
         org-fold-catch-invisible-edits 'show-and-error
         org-special-ctrl-a/e t
@@ -1227,7 +1227,7 @@ mark the string and call `edit-indirect-region' with it."
 
   (setq org-agenda-window-setup 'current-window
         org-agenda-log-mode-items (quote (closed state clock))
-        org-agenda-tags-column 0
+        org-agenda-tags-column -105
         org-agenda-block-separator ?─
         org-agenda-time-grid
         '((daily today require-timed)
@@ -1326,6 +1326,7 @@ mark the string and call `edit-indirect-region' with it."
   (setq org-modern-hide-stars nil
         org-modern-star 'replace
         org-modern-replace-stars "❶❷❸❹❺❻❼"
+        org-modern-progress 7
         ;; Set todo colors from moe-theme
         org-modern-todo-faces '(("TODO" :background "#5f0000" :weight bold)  ;; red-4
                                 ("NEXT" :background "#0000af" :weight bold)  ;; blue-5
@@ -1629,7 +1630,9 @@ mark the string and call `edit-indirect-region' with it."
   (setq cider-repl-pop-to-buffer-on-connect 'display-only)
   ;; Just use symbol under point and don't prompt for symbol in e.g. cider-doc.
   (setq cider-prompt-for-symbol nil)
-
+  ;; Use clj-reload instead of clojure.tools.namespace
+  (setq cider-ns-code-reload-tool 'clj-reload)
+  
   ;; I basically never connect to a remote host nrepl, so skip the host question on connect
   (defun cider--completing-read-host (hosts)
     '("localhost"))
@@ -1858,6 +1861,7 @@ the *cider-result* buffer."
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(org-agenda-files nil)
  '(package-selected-packages
    '(git-modes inflections paredit web-mode csv-mode edit-indirect form-feed inf-mongo ob-mongo dogears ibuffer-project dired-ranger logview magit request lsp-mode smartparens vertico undo-fu-session groovy-mode flycheck dap-mode lsp-java lsp-treemacs lsp-ui eldoc clojure-mode multiple-cursors ob-restclient restclient orgit org-appear diff-hl git-link avy markdown-mode tempel ligature moe-theme treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo smart-region rainbow-delimiters org-modern orderless no-littering marginalia embark consult aggressive-indent)))
 (custom-set-faces

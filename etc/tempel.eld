@@ -1,7 +1,9 @@
 fundamental-mode ;; Available everywhere
 
+(calc (p "23*42" formula) " = " (format "%s" (calc-eval formula)))
 (today (format-time-string "%Y-%m-%d"))
 (tomorrow (format-time-string "<%Y-%m-%d>" (time-add nil (* 24 60 60))))
+(shrug "¯\\_(ツ)_/¯")
 
 prog-mode
 
@@ -70,7 +72,7 @@ text-mode
 (cut "--8<---------------cut here---------------start------------->8---" n r n
      "--8<---------------cut here---------------end--------------->8---" n)
 (rot13 (p "plain text" text) n "----" n (rot13 text))
-(calc (p "taylor(sin(x),x=0,3)" formula) n "----" n (format "%s" (calc-eval formula)))
+(formula (p "taylor(sin(x),x=0,3)" formula) n "=> " (format "%s" (calc-eval formula)))
 
 rst-mode
 
