@@ -1033,6 +1033,22 @@
   (setq eat-term-name "xterm-256color"
         eat-kill-buffer-on-exit t))
 
+(use-package dimmer
+  :unless noninteractive
+  :hook (elpaca-after-init . dimmer-mode)
+  :config
+  ;; Don't dim hydra, transient buffers or minibuffers
+  (setq dimmer-buffer-exclusion-regexps '(" \\*\\(LV\\|transient\\)\\*"
+                                          "^ \\*.*posframe.*buffer.*\\*$"
+                                          "^\\*Minibuf-[0-9]+\\*"
+                                          "^.\\*which-key\\*$"
+                                          "^.\\*Echo.*\\*"))
+  ;;(setq dimmer-use-colorspace ':rgb)
+  (setq dimmer-fraction 0.25))
+
+(use-feature winner-mode
+  :hook (elpaca-after-init . winner-mode))
+
 (use-feature browse-url
   :bind (("C-c u" . browse-url-at-point)))
 
