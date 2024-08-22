@@ -9,18 +9,70 @@
 (setq gc-cons-threshold (* 256 1024 1024))  ;; 256MB
 
 ;; Disable startup screen and startup echo area message and select the scratch buffer by default
-(setq inhibit-startup-buffer-menu t)
-(setq inhibit-startup-screen t)
-(setq inhibit-startup-echo-area-message user-login-name)
-(setq initial-buffer-choice t)
-(setq initial-scratch-message nil)
+(setq inhibit-startup-buffer-menu t
+      inhibit-startup-screen t
+      inhibit-startup-echo-area-message user-login-name
+      initial-buffer-choice t
+      initial-scratch-message nil)
 
-(require 'package)
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
-(package-initialize)
+
+;; Initialize elpaca
 
+(defvar elpaca-installer-version 0.7)
+(defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
+(defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
+(defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
+(defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
+                              :ref nil :depth nil
+                              :files (:defaults "elpaca-test.el" (:exclude "extensions"))
+                              :build (:not elpaca--activate-package)))
+(let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
+       (build (expand-file-name "elpaca/" elpaca-builds-directory))
+       (order (cdr elpaca-order))
+       (default-directory repo))
+  (add-to-list 'load-path (if (file-exists-p build) build repo))
+  (unless (file-exists-p repo)
+    (make-directory repo t)
+    (when (< emacs-major-version 28) (require 'subr-x))
+    (condition-case-unless-debug err
+        (if-let ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
+                 ((zerop (apply #'call-process `("git" nil ,buffer t "clone"
+                                                 ,@(when-let ((depth (plist-get order :depth)))
+                                                     (list (format "--depth=%d" depth) "--no-single-branch"))
+                                                 ,(plist-get order :repo) ,repo))))
+                 ((zerop (call-process "git" nil buffer t "checkout"
+                                       (or (plist-get order :ref) "--"))))
+                 (emacs (concat invocation-directory invocation-name))
+                 ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
+                                       "--eval" "(byte-recompile-directory \".\" 0 'force)")))
+                 ((require 'elpaca))
+                 ((elpaca-generate-autoloads "elpaca" repo)))
+            (progn (message "%s" (buffer-string)) (kill-buffer buffer))
+          (error "%s" (with-current-buffer buffer (buffer-string))))
+      ((error) (warn "%s" err) (delete-directory repo 'recursive))))
+  (unless (require 'elpaca-autoloads nil t)
+    (require 'elpaca)
+    (elpaca-generate-autoloads "elpaca" repo)
+    (load "./elpaca-autoloads")))
+(add-hook 'after-init-hook #'elpaca-process-queues)
+(elpaca `(,@elpaca-order))
+
+;; Always make a full clone of the repository
+(plist-put elpaca-order-defaults :depth nil)
+
+(add-to-list 'elpaca-ignored-dependencies 'hydra)
+
+(when (eq system-type 'windows-nt)
+  (setq elpaca-queue-limit 10)
+  (elpaca-no-symlink-mode))
+
+(setq use-package-always-ensure t)
 (setq use-package-enable-imenu-support t)
-(require 'use-package)
+
+(elpaca elpaca-use-package
+  ;; Enable Elpaca support for use-package's :ensure keyword.
+  (elpaca-use-package-mode))
+
 (if nil  ; Toggle init debug
     (setq use-package-verbose t
           use-package-expand-minimally nil
@@ -29,9 +81,20 @@
   (setq use-package-verbose nil
         use-package-expand-minimally t))
 
-(use-package bind-key :defer t)
+
+
+(defmacro use-feature (name &rest args)
+  "Like `use-package' but accounting for asynchronous installation.
+  NAME and ARGS are in `use-package'."
+  (declare (indent defun))
+  `(use-package ,name
+     :ensure nil
+     ,@args))
+
+(use-feature bind-key :defer t)
 
 (use-package no-littering
+  :ensure (:wait t)
   :demand t
   :config
   (setq server-auth-dir (no-littering-expand-var-file-name "server"))
@@ -40,7 +103,7 @@
   ;; Put the auto-save and backup files in the var directory to the other data files
   (no-littering-theme-backups))
 
-(use-package emacs
+(use-feature emacs
   :config
   ;; Compile loaded .elc files asynchronously
   (setq native-comp-jit-compilation t
@@ -163,7 +226,7 @@
   ;; commands are hidden in normal buffers. This setting is useful beyond Vertico.
   (setq read-extended-command-predicate #'command-completion-default-include-p))
 
-(use-package simple
+(use-feature simple
   :bind (("C-/"   . undo-only)
          ("C-z"   . undo-only)
          ("C-S-z" . undo-redo)
@@ -218,15 +281,17 @@
   (dakra-define-up/downcase-dwim "capitalize"))
 
 (use-package moe-theme
+  :ensure (:remotes (("dakra" :host github :repo "dakra/moe-theme.el" :branch "dev-dmacs") "origin"))
+  :demand t
   :load-path "lib/moe-theme"  ;; Symlinks are difficult in Windows environments without admin access
   :config (load-theme 'moe-dark t))
 
 ;; highlight the current line
-(use-package hl-line
+(use-feature hl-line
   :init
   (global-hl-line-mode))
 
-(use-package abbrev
+(use-feature abbrev
   :hook (text-mode . abbrev-mode)
   ;; :hook ((message-mode org-mode markdown-mode rst-mode) . abbrev-mode)
   :config
@@ -236,26 +301,26 @@
   (setq abbrev-file-name (no-littering-expand-etc-file-name "abbrev.el")))
 
 ;; Saveplace: Remember your location in a file
-(use-package saveplace
+(use-feature saveplace
   :unless noninteractive
   :demand t
   :config
   (setq save-place-limit 1000)
   (save-place-mode))
 
-(use-package repeat
+(use-feature repeat
   :unless noninteractive
-  :hook (after-init . repeat-mode))
+  :hook (elpaca-after-init . repeat-mode))
 
 ;; Savehist: Keep track of minibuffer history
-(use-package savehist
+(use-feature savehist
   :unless noninteractive
-  :hook (after-init . savehist-mode)
+  :hook (elpaca-after-init . savehist-mode)
   :config
   (setq savehist-additional-variables
         '(compile-command kill-ring regexp-search-ring corfu-history)))
 
-(use-package windmove
+(use-feature windmove
   :bind (("M-i" . windmove-up)
          ("M-k" . windmove-down)
          ("M-j" . windmove-left)
@@ -266,21 +331,21 @@
          ("M-L" . windmove-swap-states-right)))
 
 ;; So-long: Mitigating slowness due to extremely long lines
-(use-package so-long
+(use-feature so-long
   :defer 5
   :config
   (global-so-long-mode))
 
-(use-package compile
+(use-feature compile
   :config
   (setq compilation-ask-about-save nil  ;; Always save before compiling
         compilation-always-kill t  ;; Kill old compile processes before starting a new one
         compilation-scroll-output t))  ;; Scroll with the compilation output
 
-(use-package ansi-color
+(use-feature ansi-color
   :hook (compilation-filter . ansi-color-compilation-filter))
 
-(use-package treesit
+(use-feature treesit
   :defer t
   :config
   ;; Download the pre-build grammars from https://github.com/emacs-tree-sitter/tree-sitter-langs/releases
@@ -319,21 +384,11 @@
            (format . "TIMESTAMP [THREAD] {} LEVEL NAME -")
            (levels . "SLF4J")))))
 
-(use-package eglot
+(use-feature eglot
   :defer t
   :config
   (setq eglot-extend-to-xref t)
   (setq eglot-autoshutdown t))
-
-(use-package eglot-java
-  :disabled t
-  :after eglot
-  :config
-  (setq eglot-java-eclipse-jdt-cache-directory
-        (no-littering-expand-var-file-name "eglot/java/eglot-java-eclipse-jdt-cache"))
-  (setq eglot-java-server-install-dir (no-littering-expand-var-file-name "eglot/java/eclipse.jdt.ls"))
-  (setq eglot-java-junit-platform-console-standalone-jar
-        (no-littering-expand-var-file-name "eglot/java/junit-platform-console-standalone/junit-platform-console-standalone.jar")))
 
 (use-package flycheck
   :hook (((prog-mode
@@ -475,7 +530,7 @@
   ;; Use 3rd party decompiler
   (setq lsp-java-content-provider-preferred "fernflower"))
 
-(use-package dap-mode
+(use-feature dap-mode
   :after lsp-mode
   :bind (:map dap-server-log-mode-map
               ("g" . recompile)
@@ -489,10 +544,10 @@
   (setq dap-auto-configure-features '(sessions locals breakpoints expressions repl tooltip))
   (dap-auto-configure-mode))
 
-(use-package dap-java
+(use-feature dap-java
   :after dap-mode)
 
-(use-package eldoc
+(use-feature eldoc
   :hook (prog-mode . eldoc-mode)
   :config
   (setq eldoc-documentation-default 'eldoc-documentation-compose-eagerly)
@@ -515,14 +570,14 @@
   :config
   (vertico-mode))
 
-(use-package vertico-buffer
+(use-feature vertico-buffer
   :after vertico
   :config
   (setq vertico-buffer-display-action '(display-buffer-below-selected
                                         (window-height . ,(+ 3 vertico-count))))
   (vertico-buffer-mode))
 
-(use-package vertico-multiform
+(use-feature vertico-multiform
   :after vertico
   :config
   (setq vertico-multiform-commands
@@ -667,12 +722,12 @@
         corfu-auto-delay 0.1
         corfu-auto-prefix 2))
 
-(use-package corfu-history
+(use-feature corfu-history
   :after corfu
   :config
   (corfu-history-mode))
 
-(use-package corfu-popupinfo
+(use-feature corfu-popupinfo
   :after corfu
   :config
   (setq corfu-popupinfo-max-height 30)
@@ -684,7 +739,7 @@
   :config (setq wgrep-auto-save-buffer t))
 
 (use-package undo-fu-session
-  :hook (after-init . undo-fu-session-global-mode)
+  :hook (elpaca-after-init . undo-fu-session-global-mode)
   :config
   (setq undo-fu-session-incompatible-files '("/COMMIT_EDITMSG\\'" "/git-rebase-todo\\'")))
 
@@ -703,7 +758,7 @@
                                        "=:=" "=!=" "==" "=~" "!~" "===" "::" ":=" ":>" ">:"
                                        ";;" "__" "..." ".." "&&" "++")))
 
-(use-package subword
+(use-feature subword
   :hook ((python-mode yaml-ts-mode conf-mode go-mode go-ts-mode clojure-mode cider-repl-mode
                       java-mode java-ts-mode cds-mode js-mode js-ts-mode) . subword-mode))
 
@@ -719,13 +774,13 @@
 (use-package rainbow-delimiters
   :hook ((emacs-lisp-mode lisp-mode hy-mode clojure-mode cider-repl-mode sql-mode) . rainbow-delimiters-mode))
 
-(use-package hippie-exp
+(use-feature hippie-exp
   :bind (("M-/" . hippie-expand)))
 
 ;; Do action that normally works on a region to the whole line if no region active.
 ;; That way you can just C-w to copy the whole line for example.
 (use-package whole-line-or-region
-  :hook (after-init . whole-line-or-region-global-mode))
+  :hook (elpaca-after-init . whole-line-or-region-global-mode))
 
 (use-package symbol-overlay
   :hook ((prog-mode html-mode css-mode) . symbol-overlay-mode)
@@ -858,7 +913,7 @@
     (define-key mc/keymap (kbd "C-,") 'mc/unmark-next-like-this)
     (define-key mc/keymap (kbd "C-.") 'mc/skip-to-next-like-this)))
 
-(use-package recentf
+(use-feature recentf
   :demand t
   :config
   (add-to-list 'recentf-exclude "^/\\(?:ssh\\|su\\|sudo\\)?:")
@@ -872,7 +927,7 @@
 
   (recentf-mode))
 
-(use-package hideshow
+(use-feature hideshow
   :hook (prog-mode . hs-minor-mode)
   :bind (:map hs-minor-mode-map
               ([C-tab] . hs-toggle-hiding)))
@@ -893,20 +948,20 @@
   (setq dogears-idle 3)
   (dogears-mode))
 
-(use-package bookmark
+(use-feature bookmark
   :defer t
   :config
   ;; Hide all the fringe bookmarks as dogears uses bookmarks
   (setq bookmark-fringe-mark nil))
 
-(use-package proced
+(use-feature proced
   :bind ("C-x p" . proced)
   :config
   (setq-default proced-filter 'all)
   (setq proced-format 'medium)
   (setq proced-tree-flag t))
 
-(use-package dired
+(use-feature dired
   :bind (("C-x d" . dired)
          :map dired-mode-map
          ("j" . consult-line)
@@ -942,7 +997,7 @@
              ("'" . dired-ranger-bookmark)
              ("`" . dired-ranger-bookmark-visit)))
 
-(use-package eshell
+(use-feature eshell
   :bind (("C-x m" . eshell))
   :init
   (setq eshell-aliases-file (no-littering-expand-etc-file-name "eshell-aliases"))
@@ -963,8 +1018,7 @@
         eshell-prefer-lisp-functions nil))
 
 (use-package eat
-  :load-path "lib/eat"
-  :commands (eat)
+  :ensure (:host github :repo "dakra/eat" :branch "windows-git-bash")
   :hook (eshell-load-hook . eat-eshell-visual-command-mode)
   :bind (:map eat-semi-char-mode-map
               ("M-i" . windmove-up)
@@ -976,12 +1030,13 @@
               ("M-I" . windmove-swap-states-up)
               ("M-L" . windmove-swap-states-right))
   :config
-  (setq eat-term-name "xterm-256color"))
+  (setq eat-term-name "xterm-256color"
+        eat-kill-buffer-on-exit t))
 
-(use-package browse-url
+(use-feature browse-url
   :bind (("C-c u" . browse-url-at-point)))
 
-(use-package project
+(use-feature project
   :bind-keymap (("s-p"   . project-prefix-map)  ; projectile-command-map
                 ("C-c p" . project-prefix-map))
   :bind (("C-x C-x" . consult-project-extra-find)
@@ -1023,7 +1078,7 @@ created a dedicated process for the project."
   ;; Don't show a dispatch menu when switching projects but always choose project buffer/file
   (setq project-switch-commands #'consult-project-extra-find))
 
-(use-package ibuffer
+(use-feature ibuffer
   :bind ("C-x C-b" . ibuffer))
 
 (use-package ibuffer-project
@@ -1087,7 +1142,7 @@ mark the string and call `edit-indirect-region' with it."
   :defer t)
 
 (use-package org
-  :load-path "lib/org/lisp"
+  :ensure (:remotes (("dakra" :host github :repo "dakra/org-mode") "origin"))
   :mode ("\\.\\(org\\|org_archive\\)\\'" . org-mode)
   :bind (("C-c a"   . org-agenda)
          :map org-mode-map
@@ -1147,7 +1202,7 @@ mark the string and call `edit-indirect-region' with it."
 
   (set-face-attribute 'org-ellipsis nil :inherit 'default :box nil))
 
-(use-package org-duration
+(use-feature org-duration
   :defer t
   :after org
   :config
@@ -1156,7 +1211,7 @@ mark the string and call `edit-indirect-region' with it."
   ;; time duration (avoid showing days)
   (setq org-duration-format '((special . h:mm))))
 
-(use-package org-clock
+(use-feature org-clock
   :bind (("<f7>"    . org-clock-goto)
          ("C-c o i" . org-clock-in)
          ("C-c C-x C-j" . org-clock-goto)
@@ -1206,13 +1261,13 @@ mark the string and call `edit-indirect-region' with it."
   ;; Include current clocking task in clock reports
   (setq org-clock-report-include-clocking-task t))
 
-(use-package ol  ;; org-link
+(use-feature ol  ;; org-link
   :bind (("C-c l" . org-store-link))
   :config
   ;; Don't remove links after inserting
   (setq org-link-keep-stored-after-insertion t))
 
-(use-package org-agenda
+(use-feature org-agenda
   :defer t
   :config
   ;; Keep tasks with dates/deadlines/scheduled dates/timestamps on the global todo lists
@@ -1236,7 +1291,7 @@ mark the string and call `edit-indirect-region' with it."
         org-agenda-current-time-string
         "◀── now ─────────────────────────────────────────────────"))
 
-(use-package ob
+(use-feature ob
   :after org
   :hook ((org-babel-after-execute . org-display-inline-images))
   :config
@@ -1276,7 +1331,7 @@ mark the string and call `edit-indirect-region' with it."
      (sql . t)
      (sqlite . t))))
 
-(use-package ob-clojure
+(use-feature ob-clojure
   :after ob
   :config
   (setq org-babel-clojure-backend 'babashka))
@@ -1287,7 +1342,7 @@ mark the string and call `edit-indirect-region' with it."
 (use-package ob-mongo
   :after ob)
 
-(use-package org-src
+(use-feature org-src
   :after org
   :config
   ;; Always split babel source window below.
@@ -1300,7 +1355,7 @@ mark the string and call `edit-indirect-region' with it."
   (add-to-list 'org-src-lang-modes '("ini" . conf))
   (add-to-list 'org-src-lang-modes '("conf" . conf)))
 
-(use-package ol
+(use-feature ol
   :after org
   :config
   (setq org-link-keep-stored-after-insertion t))
@@ -1337,8 +1392,7 @@ mark the string and call `edit-indirect-region' with it."
                                 ("MEETING" :background "#875f00" :weight bold))))  ;; yellow-4
 
 (use-package org-modern-indent
-  :load-path "lib/org-modern-indent"
-  :commands (org-modern-indent-mode)
+  :ensure (:host github :repo "jdtsmith/org-modern-indent")
   :defer t
   :init
   (add-hook 'org-mode-hook #'org-modern-indent-mode 90))
@@ -1546,7 +1600,7 @@ mark the string and call `edit-indirect-region' with it."
                  `(,(concat comment-start-skip "-\\{40,\\}") 0 form-feed--font-lock-face t))
     (form-feed-mode)))
 
-(use-package elisp-mode
+(use-feature elisp-mode
   :bind (:map emacs-lisp-mode-map
               ("C-c C-c" . eval-defun)
               ("C-c C-b" . eval-buffer)
@@ -1581,8 +1635,7 @@ mark the string and call `edit-indirect-region' with it."
   (put-clojure-indent 'match 1))
 
 (use-package cider
-  :load-path "lib/cider"
-  :commands (cider-jack-in-babashka cider-connect cider-jack-in)
+  :ensure (:remotes (("dakra" :host github :repo "dakra/cider" :branch "wip") "origin"))
   :bind (:map cider-mode-map
               ("<f6>" . cider-scratch-project)
               ("M-?" . cider-maybe-clojuredocs)
@@ -1751,16 +1804,15 @@ the *cider-result* buffer."
                                                   cljr-suppress-middleware-warnings t)
                                       (rename-buffer "*babashka-repl*")))))))))
 
-(use-package nrepl-client
-  :config
-  ;; Give sync requests a bit more time to respond (default 10s)
-  ;; Especially when using with ejc-sql and e.g. Athena queries
-  (setq nrepl-sync-request-timeout 90))
+;; (use-package nrepl-client
+;;   :config
+;;   ;; Give sync requests a bit more time to respond (default 10s)
+;;   ;; Especially when using with ejc-sql and e.g. Athena queries
+;;   (setq nrepl-sync-request-timeout 90))
 
 (use-package clj-refactor
-  :load-path "lib/clj-refactor"
+  :ensure (:remotes (("dakra" :host github :repo "dakra/clj-refactor.el" :branch "no-yas-no-hydra") "origin"))
   :hook (clojure-mode . clj-refactor-mode)
-  :commands (clj-refactor-mode)
   :config
   ;; Allow a few more chars each row in namespace (default 72)
   (setq cljr-print-right-margin 90)
@@ -1780,16 +1832,16 @@ the *cider-result* buffer."
                            ("tick"     . "tick.core")))
     (add-to-list 'cljr-magic-require-namespaces magic-require)))
 
-(use-package json-ts-mode
+(use-feature json-ts-mode
   :mode ("\\.json\\'" "\\.avsc\\'"))
 
-(use-package java-ts-mode
+(use-feature java-ts-mode
   :mode ("\\.java\\'"))
 
 (use-package groovy-mode
   :defer t)
 
-(use-package yaml-ts-mode
+(use-feature yaml-ts-mode
   :mode ("\\.yaml\\'" "\\.yml\\'")
   :config
   ;; Not the perfect outline regexp but better than no folding support
@@ -1798,7 +1850,7 @@ the *cider-result* buffer."
 (use-package toml-mode
   :mode ("\\.toml\\'" "Cargo.lock\\'"))
 
-(use-package python
+(use-feature python
   :mode (("\\.py\\'" . python-ts-mode))
   :interpreter ("python" . python-ts-mode)
   :bind (:map python-ts-mode-map
@@ -1847,6 +1899,7 @@ the *cider-result* buffer."
 
 
 (use-package kubel
+  :ensure (:remotes (("dakra" :repo "dakra/kubel") "origin"))
   :bind ((:map kubel-mode-map
                ("N" . kubel-set-namespace)
                ("P" . kubel-port-forward-pod)
@@ -1855,18 +1908,3 @@ the *cider-result* buffer."
 
 ;; Load personal config that shouldn't end up on github
 (load-file (expand-file-name "personal.el" user-emacs-directory))
-
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(org-agenda-files nil)
- '(package-selected-packages
-   '(git-modes inflections paredit web-mode csv-mode edit-indirect form-feed inf-mongo ob-mongo dogears ibuffer-project dired-ranger logview magit request lsp-mode smartparens vertico undo-fu-session groovy-mode flycheck dap-mode lsp-java lsp-treemacs lsp-ui eldoc clojure-mode multiple-cursors ob-restclient restclient orgit org-appear diff-hl git-link avy markdown-mode tempel ligature moe-theme treemacs-icons-dired treemacs-magit treemacs corfu wgrep minions ssh-agency kubel shrink-whitespace selected symbol-overlay embark-consult consult-project-extra whole-line-or-region vundo smart-region rainbow-delimiters org-modern orderless no-littering marginalia embark consult aggressive-indent)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
