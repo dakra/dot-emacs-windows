@@ -283,7 +283,6 @@
 (use-package moe-theme
   :ensure (:remotes (("dakra" :host github :repo "dakra/moe-theme.el" :branch "dev-dmacs") "origin"))
   :demand t
-  :load-path "lib/moe-theme"  ;; Symlinks are difficult in Windows environments without admin access
   :config (load-theme 'moe-dark t))
 
 ;; highlight the current line
