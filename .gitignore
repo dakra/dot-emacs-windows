@@ -2,4 +2,5 @@ personal.el
 *.elc
 var/
 server/
-elpaca/
+elpaca/cache
+elpaca/repos
