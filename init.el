@@ -16,6 +16,10 @@
       initial-scratch-message nil)
 
 
+;; Load personal config that shouldn't end up on github
+(load-file (expand-file-name "personal.el" user-emacs-directory))
+
+
 ;; Initialize elpaca
 
 (defvar elpaca-installer-version 0.7)
@@ -1157,7 +1161,9 @@ mark the string and call `edit-indirect-region' with it."
   :defer t)
 
 (use-package org
-  :ensure (:remotes (("dakra" :host github :repo "dakra/org-mode") "origin"))
+  :ensure (
+           :host github :repo "dakra/org-mode" :pre-build nil
+           :remotes (("dakra" :host github :repo "dakra/org-mode") "origin"))
   :mode ("\\.\\(org\\|org_archive\\)\\'" . org-mode)
   :bind (("C-c a"   . org-agenda)
          :map org-mode-map
@@ -1856,6 +1862,13 @@ the *cider-result* buffer."
 (use-package groovy-mode
   :defer t)
 
+(use-package jenkinsfile-mode
+  :mode ("/Jenkinsfile.*"))
+
+(use-package jenkins
+  :ensure (:remotes (("dakra" :repo "dakra/jenkins.el" :branch "wip") "origin"))
+  :defer t)
+
 (use-feature yaml-ts-mode
   :mode ("\\.yaml\\'" "\\.yml\\'")
   :config
@@ -1920,6 +1933,3 @@ the *cider-result* buffer."
                ("P" . kubel-port-forward-pod)
                ("n" . next-line)
                ("p" . previous-line))))
-
-;; Load personal config that shouldn't end up on github
-(load-file (expand-file-name "personal.el" user-emacs-directory))
