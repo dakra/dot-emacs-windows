@@ -513,6 +513,10 @@
   :after lsp-mode
   :hook (((java-mode java-ts-mode conf-javaprop-mode) . lsp-java-boot-lens-mode))
   :config
+  ;; See https://github.com/eclipse-jdtls/eclipse.jdt.ls/blob/master/CHANGELOG.md
+  ;; and download from https://download.eclipse.org/jdtls/milestones/
+  (setq lsp-java-jdt-download-url "https://www.eclipse.org/downloads/download.php?file=/jdtls/milestones/1.39.0/jdt-language-server-1.39.0-202408291433.tar.gz")
+
   (setq lsp-java-compile-null-analysis-mode "automatic")
 
   ;; Use Google style formatting by default
@@ -1706,7 +1710,7 @@ mark the string and call `edit-indirect-region' with it."
   (setq cider-prompt-for-symbol nil)
   ;; Use clj-reload instead of clojure.tools.namespace
   (setq cider-ns-code-reload-tool 'clj-reload)
-  
+
   ;; I basically never connect to a remote host nrepl, so skip the host question on connect
   (defun cider--completing-read-host (hosts)
     '("localhost"))
