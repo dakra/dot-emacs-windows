@@ -165,7 +165,7 @@
   ;; Only split horizontally if there are at least 90 chars column after splitting
   (setq split-width-threshold 180)
   ;; Only split vertically on very tall screens
-  (setq split-height-threshold 120)
+  (setq split-height-threshold 140)
 
   ;; Save whatever’s in the current (system) clipboard before
   ;; replacing it with the Emacs’ text.
@@ -403,6 +403,11 @@
            rst-mode) . flycheck-mode)
          (flycheck-mode . mp-flycheck-prefer-eldoc))
   :config
+  ;; Don't initialize packages (as we don't use package.el)
+  (setq flycheck-emacs-lisp-initialize-packages nil)
+  ;; Use the load-path from running Emacs when checking elisp files
+  (setq flycheck-emacs-lisp-load-path 'inherit)
+
   ;; Only do flycheck when I actually safe the buffer
   (setq flycheck-check-syntax-automatically '(save mode-enable))
 
@@ -1166,7 +1171,7 @@ mark the string and call `edit-indirect-region' with it."
 
 (use-package org
   :ensure (
-           :host github :repo "dakra/org-mode" :pre-build nil
+           :host github :repo "dakra/org-mode" ;; :pre-build nil
            :remotes (("dakra" :host github :repo "dakra/org-mode") "origin"))
   :mode ("\\.\\(org\\|org_archive\\)\\'" . org-mode)
   :bind (("C-c a"   . org-agenda)
