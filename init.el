@@ -1049,6 +1049,41 @@
   :unless noninteractive
   :hook (elpaca-after-init . dimmer-mode)
   :config
+  ;; Bugfix. See https://github.com/gonewest818/dimmer.el/issues/68#issuecomment-2053620377
+  (defun dimmer-face-color (f frac)
+    (let* ((fg-original (face-foreground f))
+           (fg (if (eq 'reset fg-original) 'unspecified  fg-original))
+           (bg-original (face-background f))
+           (bg (if (eq 'reset bg-original) 'unspecified  bg-original))
+           (def-fg (face-foreground 'default))
+           (def-bg (face-background 'default))
+           ;; when mode is :both, the perceptual effect is "doubled"
+           (my-frac (if (eq dimmer-adjustment-mode :both)
+                        (/ frac 2.0)
+                      frac))
+           (result '()))
+      (when (and (or (eq dimmer-adjustment-mode :foreground)
+                     (eq dimmer-adjustment-mode :both))
+                 fg (color-defined-p fg)
+                 def-bg (color-defined-p def-bg))
+        (setq result
+              (plist-put result :foreground
+                         (dimmer-cached-compute-rgb fg
+                                                    def-bg
+                                                    my-frac
+                                                    dimmer-use-colorspace))))
+      (when (and (or (eq dimmer-adjustment-mode :background)
+                     (eq dimmer-adjustment-mode :both))
+                 bg (color-defined-p bg)
+                 def-fg (color-defined-p def-fg))
+        (setq result
+              (plist-put result :background
+                         (dimmer-cached-compute-rgb bg
+                                                    def-fg
+                                                    my-frac
+                                                    dimmer-use-colorspace))))
+      result))
+
   ;; Don't dim hydra, transient buffers or minibuffers
   (setq dimmer-buffer-exclusion-regexps '(" \\*\\(LV\\|transient\\)\\*"
                                           "^ \\*.*posframe.*buffer.*\\*$"
@@ -1550,6 +1585,15 @@ mark the string and call `edit-indirect-region' with it."
 
   ;; Show magit status in the same window
   (setq magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
+
+(use-package forge
+  :after magit
+  :config
+  ;; Don't pull notifications as it blocks Emacs for a long time
+  (setq forge-pull-notifications nil))
+
+(use-package git-modes
+  :defer t)
 
 (use-package ssh-agency
   :after magit)
