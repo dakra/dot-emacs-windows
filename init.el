@@ -70,6 +70,14 @@
   (setq elpaca-queue-limit 10)
   (elpaca-no-symlink-mode))
 
+;; Add custom `use-feature' macro to imenu regex
+(setq use-package-form-regexp-eval
+      (concat "^\\s-*("
+              (regexp-opt '("use-package" "use-feature" "require") t)
+              "\\s-+\\("
+              (or (bound-and-true-p lisp-mode-symbol-regexp)
+                  "\\(?:\\sw\\|\\s_\\|\\\\.\\)+") "\\)"))
+
 (setq use-package-always-ensure t)
 (setq use-package-enable-imenu-support t)
 
@@ -89,7 +97,7 @@
 
 (defmacro use-feature (name &rest args)
   "Like `use-package' but accounting for asynchronous installation.
-  NAME and ARGS are in `use-package'."
+NAME and ARGS are in `use-package'."
   (declare (indent defun))
   `(use-package ,name
      :ensure nil
@@ -283,6 +291,12 @@
   (dakra-define-up/downcase-dwim "upcase")
   (dakra-define-up/downcase-dwim "downcase")
   (dakra-define-up/downcase-dwim "capitalize"))
+
+(use-feature tramp
+  :defer t
+  :config
+  (when (eq system-type 'windows-nt)
+    (setq tramp-default-method "scpx")))
 
 (use-package moe-theme
   :ensure (:remotes (("dakra" :host github :repo "dakra/moe-theme.el" :branch "dev-dmacs") "origin"))
@@ -926,7 +940,7 @@
     (define-key mc/keymap (kbd "C-.") 'mc/skip-to-next-like-this)))
 
 (use-feature recentf
-  :demand t
+  :hook (elpaca-after-init . recentf-mode)
   :config
   (add-to-list 'recentf-exclude "^/\\(?:ssh\\|su\\|sudo\\)?:")
   (add-to-list 'recentf-exclude no-littering-var-directory)
@@ -935,9 +949,7 @@
         recentf-max-menu-items 15
         ;; disable recentf-cleanup on Emacs start, because it can cause
         ;; problems with remote files
-        recentf-auto-cleanup 'never)
-
-  (recentf-mode))
+        recentf-auto-cleanup 'never))
 
 (use-feature hideshow
   :hook (prog-mode . hs-minor-mode)
@@ -1010,7 +1022,13 @@
              ("`" . dired-ranger-bookmark-visit)))
 
 (use-feature eshell
-  :bind (("C-x m" . eshell))
+  :bind (("C-x m" . eshell)
+         :map eshell-mode-map
+         ("M-P" . eshell-previous-prompt)
+         ("C-d" . dakra-eshell-quit-or-delete-char)
+         ("M-N" . eshell-next-prompt)
+         ("M-R" . eshell-list-history)
+         ("C-r" . consult-history))
   :init
   (setq eshell-aliases-file (no-littering-expand-etc-file-name "eshell-aliases"))
   :config
@@ -1018,16 +1036,83 @@
   (require 'em-tramp)
   (add-to-list 'eshell-modules-list 'eshell-tramp)
 
+  (require 'em-prompt)
+  (defun dakra-eshell-quit-or-delete-char (arg)
+    "Make C-d exit the shell on empty prompt or delete char otherwise"
+    (interactive "p")
+    ;; Somehow eshell-finge-status-mode adds an additional (not visible?)
+    ;; character to eol since Emacs 30.
+    ;; Just quit eshell if point is at the last or last but one position.
+    (if (and (>= (point) (1- (point-max)))
+             (looking-back eshell-prompt-regexp nil))
+        (progn
+          (eshell-life-is-too-much)
+          (ignore-errors
+            (when (= arg 4)  ; With prefix argument, also remove eshell frame/window
+              (progn
+                ;; Remove frame if eshell is only window (otherwise just close window)
+                (if (one-window-p)
+                    (delete-frame)
+                  (delete-window))))))
+      (delete-char arg)))
+
   (require 'em-hist)
+  ;; Fix eshell overwriting history.
+  ;; From https://emacs.stackexchange.com/a/18569/15023.
   (setq eshell-history-size 8192
-        eshell-ls-initial-args "-h"
+        eshell-save-history-on-exit nil)
+  (defun eshell-append-history ()
+    "Call `eshell-write-history' with the `append' parameter set to `t'."
+    (when eshell-history-ring
+      (let ((newest-cmd-ring (make-ring 1)))
+        (ring-insert newest-cmd-ring (car (ring-elements eshell-history-ring)))
+        (let ((eshell-history-ring newest-cmd-ring))
+          (eshell-write-history eshell-history-file-name t)))))
+  (add-hook 'eshell-pre-command-hook #'eshell-append-history)
+
+  (setq eshell-ls-initial-args "-h"
         eshell-scroll-to-bottom-on-input 'all
         eshell-error-if-no-glob t
         eshell-hist-ignoredups t
         eshell-visual-commands '("ptpython" "ipython" "pshell" "tail" "vi" "vim" "watch"
                                  "nmtui" "dstat" "mycli" "pgcli" "vue" "ngrok"
                                  "tmux" "screen" "top" "htop" "less" "more" "ncftp")
-        eshell-prefer-lisp-functions nil))
+        eshell-prefer-lisp-functions nil)
+
+  ;; Functions starting with `eshell/' can be called directly from eshell
+  ;; with only the last part. E.g. (eshell/foo) will call `$ foo'
+  (defun eshell/d (&optional dir)
+    "Open dired in current directory."
+    (dired (or dir ".")))
+
+  (defun eshell/ccat (file)
+    "Like `cat' but output with Emacs syntax highlighting."
+    (with-temp-buffer
+      (insert-file-contents file)
+      (let ((buffer-file-name file))
+        (delay-mode-hooks
+          (set-auto-mode)
+          (if (fboundp 'font-lock-ensure)
+              (font-lock-ensure)
+            (with-no-warnings
+              (font-lock-fontify-buffer)))))
+      (buffer-string)))
+
+  (defun eshell/lcd (&optional directory)
+    "Like regular 'cd' but don't jump out of a tramp directory.
+When on a remote directory with tramp don't jump 'out' of the server.
+So if we're connected with sudo to 'remotehost'
+'$ lcd /etc' would go to '/sudo:remotehost:/etc' instead of just
+'/etc' on localhost."
+    (setq directory (or directory "~/"))
+    (unless (file-remote-p directory)
+      (setq directory (concat (file-remote-p default-directory) directory)))
+    (eshell/cd directory))
+
+  (defun eshell/gst (&rest args)
+    (magit-status-setup-buffer (or (pop args) default-directory))
+    ;; The echo command suppresses output
+    (eshell/echo)))
 
 (use-package eat
   :ensure (:host github :repo "dakra/eat" :branch "windows-git-bash")
