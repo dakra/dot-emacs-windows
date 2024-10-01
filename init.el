@@ -2071,3 +2071,7 @@ the *cider-result* buffer."
                ("P" . kubel-port-forward-pod)
                ("n" . next-line)
                ("p" . previous-line))))
+
+(use-package ipinfo
+  :ensure (:host github :repo "dakra/ipinfo.el")
+  :defer t)
