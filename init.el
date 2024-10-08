@@ -1941,6 +1941,79 @@ the *cider-result* buffer."
       (cider-interactive-eval
        (concat "(lambdaisland.classpath/update-classpath! '{:extra " deps-str "})"))))
 
+  ;; XXX: Refactor clerk functions in own package
+  (defun clerk-serve ()
+    "Serve clerk notebooks."
+    (interactive)
+    (cider-interactive-eval "(nextjournal.clerk/serve! {:browse? true})"))
+
+  (defun clerk-tap-inspector ()
+    "Open tap inspector notebook to let Clerk show a tap> stream."
+    (interactive)
+    (message "Show tap> stream in clerk.")
+    (cider-interactive-eval "(nextjournal.clerk/show! 'nextjournal.clerk.tap)"))
+
+  (defun clerk-tap-table (&optional full-p)
+    "Evaluate and tap the expression preceding point as a clerk table."
+    (interactive "P")
+    (let ((tapped-form (concat "(clojure.core/doto "
+                               (cider-last-sexp)
+                               " (->> "
+                               "(nextjournal.clerk/table "
+                               (if full-p "{:nextjournal.clerk/width :full}" "")
+                               ") clojure.core/tap>))")))
+      (cider-interactive-eval tapped-form
+                              nil
+                              nil
+                              (cider--nrepl-pr-request-map))))
+
+  (defun clerk-tap-vega-lite (&optional wide-p)
+    "Evaluate and tap the expression preceding point as a vega lite chart.
+If invoked with WIDE-P, make the chart ::clerk/width :wide"
+    (interactive "P")
+    (let ((tapped-form (concat "(clojure.core/doto "
+                               (cider-last-sexp)
+                               " (->> "
+                               "(nextjournal.clerk/vl "
+                               (if wide-p "{:nextjournal.clerk/width :wide}" "")
+                               ") clojure.core/tap>))")))
+      (cider-interactive-eval tapped-form
+                              nil
+                              nil
+                              (cider--nrepl-pr-request-map))))
+  (defun clerk-build ()
+    "Build static html for the current clerk notebook."
+    (interactive)
+    (message "Building static page")
+    (when-let ((filename (buffer-file-name)))
+      (let ((root (project-root (project-current t))))
+        (cider-interactive-eval
+         (concat "(nextjournal.clerk/build! {:paths [\""
+                 (file-relative-name filename root) "\"]})")))))
+
+  (defun clerk-show ()
+    "Show buffer in clerk."
+    (interactive)
+    (message "Show buffer in clerk.")
+    (when-let ((filename (buffer-file-name)))
+      (cider-interactive-eval
+       (concat "(nextjournal.clerk/show! \"" filename "\")"))))
+
+  (defun clerk-save-and-show ()
+    "Save buffer and show in clerk."
+    (interactive)
+    (save-buffer)
+    (clerk-show))
+
+  (define-minor-mode clerk-mode
+    "A mode that just binds `<M-return>' to `clerk-show'."
+    :lighter " clerk"
+    :keymap `((,(kbd "<M-return>") . clerk-save-and-show)
+              (,(kbd "<C-c t>") . clerk-tap-table))
+    (if clerk-mode
+        (add-hook 'after-save-hook #'clerk-show 100 t)
+      (remove-hook 'after-save-hook #'clerk-show t)))
+
   ;; jack-in for babashka
   ;; Code mostly from corgi: https://github.com/lambdaisland/corgi-packages/blob/main/corgi-clojure/corgi-clojure.el#L192-L211
   (defun cider-jack-in-babashka (&optional project-dir)
