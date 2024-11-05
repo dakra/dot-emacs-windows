@@ -1599,6 +1599,16 @@ mark the string and call `edit-indirect-region' with it."
   ;; use pandoc with source code syntax highlighting to preview markdown (C-c C-c p)
   (setq markdown-command "pandoc -s --highlight-style pygments -f markdown_github -t html5"))
 
+(use-package gptel
+  :defer t
+  :config
+  (require 'auth-source)
+  (setq gptel-model 'claude-3-5-sonnet-20241022
+        gptel-backend (gptel-make-anthropic "Claude"
+                        :stream t
+                        :key (auth-source-pick-first-password
+                              :host "api.anthropic.com" :login "apikey"))))
+
 (use-package with-editor
   ;; Use local Emacs instance as $EDITOR (e.g. in `git commit' or `crontab -e')
   :hook ((shell-mode eshell-mode vterm-mode term-exec) . with-editor-export-editor))
