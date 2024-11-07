@@ -1602,12 +1602,11 @@ mark the string and call `edit-indirect-region' with it."
 (use-package gptel
   :defer t
   :config
-  (require 'auth-source)
-  (setq gptel-model 'claude-3-5-sonnet-20241022
+  (setq gptel-default-mode 'org-mode
+        gptel-model 'claude-3-5-sonnet-20241022
         gptel-backend (gptel-make-anthropic "Claude"
                         :stream t
-                        :key (auth-source-pick-first-password
-                              :host "api.anthropic.com" :login "apikey"))))
+                        :key gptel-api-key)))
 
 (use-package with-editor
   ;; Use local Emacs instance as $EDITOR (e.g. in `git commit' or `crontab -e')
@@ -2016,7 +2015,7 @@ If invoked with WIDE-P, make the chart ::clerk/width :wide"
     (clerk-show))
 
   (define-minor-mode clerk-mode
-    "A mode that just binds `<M-return>' to `clerk-show'."
+    "A mode that calls `clerk-show' after save and adds a keybinding to `<M-return>'."
     :lighter " clerk"
     :keymap `((,(kbd "<M-return>") . clerk-save-and-show)
               (,(kbd "<C-c t>") . clerk-tap-table))
