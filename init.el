@@ -1,12 +1,24 @@
 ;;; init.el --- user-init-file                    -*- lexical-binding: t -*-
 
+(defvar before-user-init-time (current-time)
+  "Value of `current-time' when Emacs begins loading `user-init-file'.")
+
+(message "Loading Emacs...done (%.3fs)"
+         (float-time (time-subtract before-user-init-time
+                                    before-init-time)))
+
 ;; Deactivate tool- and menu-bar for terminal Emacs. (For GUI it's disabled in early-init.el)
 (tool-bar-mode -1)
 (menu-bar-mode -1)
 ;; Disable the scroll-bar
 (scroll-bar-mode -1)
 
-(setq gc-cons-threshold (* 256 1024 1024))  ;; 256MB
+;; Temporarily set `gc-cons-threshold' to 2G until the initialization is done
+(setq gc-cons-threshold (* 2 1024 1024 1024))  ;; 2G
+;; Temporarily disable file name handlers as it's not needed on initialization
+;; XXX: Not working with elpaca or just windows?
+;;(defvar file-name-handler-alist-old file-name-handler-alist)
+;;(setq file-name-handler-alist nil)
 
 ;; Disable startup screen and startup echo area message and select the scratch buffer by default
 (setq inhibit-startup-buffer-menu t
@@ -20,7 +32,7 @@
 (load-file (expand-file-name "personal.el" user-emacs-directory))
 
 
-;; Initialize elpaca
+;;; Initialize elpaca
 
 (defvar elpaca-installer-version 0.8)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -93,6 +105,28 @@
   (setq use-package-verbose nil
         use-package-expand-minimally t))
 
+(add-hook 'elpaca-after-init-hook
+          (lambda ()
+            (message
+             "Loading %s...done (%.3fs) [after-init]" user-init-file
+             (float-time (time-subtract (current-time)
+                                        before-user-init-time)))
+            ;; Restore original file name handlers
+            ;;(setq file-name-handler-alist file-name-handler-alist-old)
+            ;; Let's lower our GC thresholds back down to 256MB.
+            (setq gc-cons-threshold (* 256 1024 1024)))
+          t)
+
+(use-package no-littering
+  :ensure (:wait t)
+  :demand t
+  :config
+  (setq server-auth-dir (no-littering-expand-var-file-name "server"))
+  ;; /etc is version controlled and I want to store mc-lists in git
+  (setq mc/list-file (no-littering-expand-etc-file-name "mc-list.el"))
+  ;; Put the auto-save and backup files in the var directory to the other data files
+  (no-littering-theme-backups))
+
 
 
 (defmacro use-feature (name &rest args)
@@ -105,20 +139,10 @@ NAME and ARGS are in `use-package'."
 
 (use-feature bind-key :defer t)
 
-(use-package no-littering
-  :ensure (:wait t)
-  :demand t
-  :config
-  (setq server-auth-dir (no-littering-expand-var-file-name "server"))
-  ;; /etc is version controlled and I want to store mc-lists in git
-  (setq mc/list-file (no-littering-expand-etc-file-name "mc-list.el"))
-  ;; Put the auto-save and backup files in the var directory to the other data files
-  (no-littering-theme-backups))
-
 (use-feature emacs
   :config
   ;; Compile loaded .elc files asynchronously
-  (setq native-comp-jit-compilation t
+  (setq native-comp-jit-compilation nil
         native-comp-async-jobs-number 4)
 
   ;; NOTE: To compile eln files you first have to byte-compile them with something like:
@@ -298,11 +322,6 @@ NAME and ARGS are in `use-package'."
   (when (eq system-type 'windows-nt)
     (setq tramp-default-method "scpx")))
 
-(use-package moe-theme
-  :ensure (:remotes (("dakra" :host github :repo "dakra/moe-theme.el" :branch "dev-dmacs") "origin"))
-  :demand t
-  :config (load-theme 'moe-dark t))
-
 ;; highlight the current line
 (use-feature hl-line
   :init
@@ -368,6 +387,100 @@ NAME and ARGS are in `use-package'."
   ;; Download the pre-build grammars from https://github.com/emacs-tree-sitter/tree-sitter-langs/releases
   ;; Place them in `treesit-extra-load-path' and rename them with a libtree-sitter-<LANG> prefix.
   (setq treesit-extra-load-path (list (no-littering-expand-var-file-name "tree-sitter-grammars"))))
+
+(use-feature subword
+  :hook ((python-mode yaml-ts-mode conf-mode go-mode go-ts-mode clojure-mode cider-repl-mode
+                      java-mode java-ts-mode cds-mode js-mode js-ts-mode) . subword-mode))
+
+(use-feature hippie-exp
+  :bind (("M-/" . hippie-expand)))
+
+(use-feature winner-mode
+  :hook (elpaca-after-init . winner-mode))
+
+(use-feature browse-url
+  :bind (("C-c u" . browse-url-at-point)))
+
+(use-feature recentf
+  :hook (elpaca-after-init . recentf-mode)
+  :config
+  (add-to-list 'recentf-exclude "^/\\(?:ssh\\|su\\|sudo\\)?:")
+  (add-to-list 'recentf-exclude no-littering-var-directory)
+
+  (setq recentf-max-saved-items 500
+        recentf-max-menu-items 15
+        ;; disable recentf-cleanup on Emacs start, because it can cause
+        ;; problems with remote files
+        recentf-auto-cleanup 'never))
+
+(use-feature hideshow
+  :hook (prog-mode . hs-minor-mode)
+  :bind (:map hs-minor-mode-map
+              ([C-tab] . hs-toggle-hiding))
+  :config
+  (setq hs-allow-nesting t))
+
+(use-feature bookmark
+  :defer t
+  :config
+  ;; Hide all the fringe bookmarks as dogears uses bookmarks
+  (setq bookmark-fringe-mark nil))
+
+(use-feature proced
+  :bind ("C-x p" . proced)
+  :config
+  (setq-default proced-filter 'all)
+  (setq proced-format 'medium)
+  (setq proced-tree-flag t))
+
+(use-feature project
+  :bind-keymap (("s-p"   . project-prefix-map)  ; projectile-command-map
+                ("C-c p" . project-prefix-map))
+  :bind (("C-x C-x" . consult-project-extra-find)
+         :map project-prefix-map
+         ("SPC" . consult-project-extra-find)
+         ("d"   . project-dired)
+         ("D"   . project-edit-deps-edn)
+         ("s"   . consult-ripgrep)
+         ("E"   . project-edit-dir-locals)
+         ("P"   . project-run-python))
+  :config
+  ;; Ignore clj-kondo and cljs-runtime folder by default
+  (setq project-vc-ignores '(".clj-kondo/" "cljs-runtime/"))
+
+  (defun project-edit-dir-locals ()
+    "Open buffer with .dir-locals.el for current project."
+    (interactive)
+    (->> (project-current)
+         (project-root)
+         (expand-file-name ".dir-locals.el")
+         (find-file)))
+
+  (defun project-edit-deps-edn ()
+    "Open buffer with deps.edn for current project."
+    (interactive)
+    (->> (project-current)
+         (project-root)
+         (expand-file-name "deps.edn")
+         (find-file)))
+
+  (require 'python)
+  (defun project-run-python ()
+    "Run a dedicated inferior Python process for the current project.
+Like `run-python' started with a prefix-arg and then choosing to
+created a dedicated process for the project."
+    (interactive)
+    (run-python (python-shell-calculate-command) 'project t))
+
+  ;; Don't show a dispatch menu when switching projects but always choose project buffer/file
+  (setq project-switch-commands #'consult-project-extra-find))
+
+
+
+(use-package moe-theme
+  :ensure (:remotes (("dakra" :host github :repo "dakra/moe-theme.el" :branch "dev-dmacs") "origin"))
+  :demand t
+  :config (load-theme 'moe-dark t))
 
 (use-package csv-mode
   :hook ((csv-mode . csv-align-mode)
@@ -784,9 +897,6 @@ NAME and ARGS are in `use-package'."
                                        "=:=" "=!=" "==" "=~" "!~" "===" "::" ":=" ":>" ">:"
                                        ";;" "__" "..." ".." "&&" "++")))
 
-(use-feature subword
-  :hook ((python-mode yaml-ts-mode conf-mode go-mode go-ts-mode clojure-mode cider-repl-mode
-                      java-mode java-ts-mode cds-mode js-mode js-ts-mode) . subword-mode))
 
 (use-package aggressive-indent
   :hook ((emacs-lisp-mode lisp-mode hy-mode clojure-mode css js-mode) . aggressive-indent-mode)
@@ -799,9 +909,6 @@ NAME and ARGS are in `use-package'."
 
 (use-package rainbow-delimiters
   :hook ((emacs-lisp-mode lisp-mode hy-mode clojure-mode cider-repl-mode sql-mode) . rainbow-delimiters-mode))
-
-(use-feature hippie-exp
-  :bind (("M-/" . hippie-expand)))
 
 ;; Do action that normally works on a region to the whole line if no region active.
 ;; That way you can just C-w to copy the whole line for example.
@@ -939,23 +1046,6 @@ NAME and ARGS are in `use-package'."
     (define-key mc/keymap (kbd "C-,") 'mc/unmark-next-like-this)
     (define-key mc/keymap (kbd "C-.") 'mc/skip-to-next-like-this)))
 
-(use-feature recentf
-  :hook (elpaca-after-init . recentf-mode)
-  :config
-  (add-to-list 'recentf-exclude "^/\\(?:ssh\\|su\\|sudo\\)?:")
-  (add-to-list 'recentf-exclude no-littering-var-directory)
-
-  (setq recentf-max-saved-items 500
-        recentf-max-menu-items 15
-        ;; disable recentf-cleanup on Emacs start, because it can cause
-        ;; problems with remote files
-        recentf-auto-cleanup 'never))
-
-(use-feature hideshow
-  :hook (prog-mode . hs-minor-mode)
-  :bind (:map hs-minor-mode-map
-              ([C-tab] . hs-toggle-hiding)))
-
 (use-package avy
   :bind ("C-;" . avy-goto-char-timer)
   :config
@@ -971,19 +1061,6 @@ NAME and ARGS are in `use-package'."
   :config
   (setq dogears-idle 3)
   (dogears-mode))
-
-(use-feature bookmark
-  :defer t
-  :config
-  ;; Hide all the fringe bookmarks as dogears uses bookmarks
-  (setq bookmark-fringe-mark nil))
-
-(use-feature proced
-  :bind ("C-x p" . proced)
-  :config
-  (setq-default proced-filter 'all)
-  (setq proced-format 'medium)
-  (setq proced-tree-flag t))
 
 (use-feature dired
   :bind (("C-x d" . dired)
@@ -1038,22 +1115,17 @@ NAME and ARGS are in `use-package'."
 
   (require 'em-prompt)
   (defun dakra-eshell-quit-or-delete-char (arg)
-    "Make C-d exit the shell on empty prompt or delete char otherwise"
+    "Make C-d exit the shell on empty prompt or delete a char otherwise."
     (interactive "p")
-    ;; Somehow eshell-finge-status-mode adds an additional (not visible?)
-    ;; character to eol since Emacs 30.
-    ;; Just quit eshell if point is at the last or last but one position.
-    (if (and (>= (point) (1- (point-max)))
-             (looking-back eshell-prompt-regexp nil))
+    (if (= (point) (line-beginning-position) (line-end-position))
         (progn
           (eshell-life-is-too-much)
           (ignore-errors
             (when (= arg 4)  ; With prefix argument, also remove eshell frame/window
-              (progn
-                ;; Remove frame if eshell is only window (otherwise just close window)
-                (if (one-window-p)
-                    (delete-frame)
-                  (delete-window))))))
+              ;; Remove frame if eshell is the only window (otherwise just close window)
+              (if (one-window-p)
+                  (delete-frame)
+                (delete-window)))))
       (delete-char arg)))
 
   (require 'em-hist)
@@ -1177,54 +1249,6 @@ So if we're connected with sudo to 'remotehost'
                                           "^.\\*Echo.*\\*"))
   ;;(setq dimmer-use-colorspace ':rgb)
   (setq dimmer-fraction 0.25))
-
-(use-feature winner-mode
-  :hook (elpaca-after-init . winner-mode))
-
-(use-feature browse-url
-  :bind (("C-c u" . browse-url-at-point)))
-
-(use-feature project
-  :bind-keymap (("s-p"   . project-prefix-map)  ; projectile-command-map
-                ("C-c p" . project-prefix-map))
-  :bind (("C-x C-x" . consult-project-extra-find)
-         :map project-prefix-map
-         ("SPC" . consult-project-extra-find)
-         ("d"   . project-dired)
-         ("D"   . project-edit-deps-edn)
-         ("s"   . consult-ripgrep)
-         ("E"   . project-edit-dir-locals)
-         ("P"   . project-run-python))
-  :config
-  ;; Ignore clj-kondo and cljs-runtime folder by default
-  (setq project-vc-ignores '(".clj-kondo/" "cljs-runtime/"))
-
-  (defun project-edit-dir-locals ()
-    "Open buffer with .dir-locals.el for current project."
-    (interactive)
-    (->> (project-current)
-         (project-root)
-         (expand-file-name ".dir-locals.el")
-         (find-file)))
-
-  (defun project-edit-deps-edn ()
-    "Open buffer with deps.edn for current project."
-    (interactive)
-    (->> (project-current)
-         (project-root)
-         (expand-file-name "deps.edn")
-         (find-file)))
-
-  (require 'python)
-  (defun project-run-python ()
-    "Run a dedicated inferior Python process for the current project.
-Like `run-python' started with a prefix-arg and then choosing to
-created a dedicated process for the project."
-    (interactive)
-    (run-python (python-shell-calculate-command) 'project t))
-
-  ;; Don't show a dispatch menu when switching projects but always choose project buffer/file
-  (setq project-switch-commands #'consult-project-extra-find))
 
 (use-feature ibuffer
   :bind ("C-x C-b" . ibuffer))
