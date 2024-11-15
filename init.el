@@ -7,9 +7,10 @@
          (float-time (time-subtract before-user-init-time
                                     before-init-time)))
 
-;; Deactivate tool- and menu-bar for terminal Emacs. (For GUI it's disabled in early-init.el)
+;; Deactivate tool- and menu-bar.
 (tool-bar-mode -1)
-(menu-bar-mode -1)
+(unless (eq system-type 'darwin)  ;; menu-bar doesn't waste space in MacOS, as the space is wasted anyway
+  (menu-bar-mode -1))
 ;; Disable the scroll-bar
 (scroll-bar-mode -1)
 
@@ -386,7 +387,10 @@ NAME and ARGS are in `use-package'."
   :config
   ;; Download the pre-build grammars from https://github.com/emacs-tree-sitter/tree-sitter-langs/releases
   ;; Place them in `treesit-extra-load-path' and rename them with a libtree-sitter-<LANG> prefix.
-  (setq treesit-extra-load-path (list (no-littering-expand-var-file-name "tree-sitter-grammars"))))
+  ;; E.g. in bash something like `for i in *.*; do mv $i libtree-sitter-$i; done'
+  (setq treesit-extra-load-path
+        (list (no-littering-expand-var-file-name (concat "tree-sitter-grammars/"
+                                                         (symbol-name system-type))))))
 
 (use-feature subword
   :hook ((python-mode yaml-ts-mode conf-mode go-mode go-ts-mode clojure-mode cider-repl-mode
@@ -778,6 +782,7 @@ created a dedicated process for the project."
          ("M-g i" . consult-imenu)
          ("M-g I" . consult-imenu-multi)
          ;; M-s bindings (search-map)
+         ("s-c" . nil)  ;; Bound to `ns-copy-including-secondary' by default on MacOS
          ("s-c d" . consult-find)
          ("s-c D" . consult-locate)
          ("s-c g" . consult-grep)
@@ -1647,6 +1652,7 @@ mark the string and call `edit-indirect-region' with it."
   :bind (("C-x g" . magit-status)
          ("C-x G" . magit-dispatch)
          ("C-x M-g" . magit-dispatch)
+         ("s-m" . nil)  ;; iconify-frame by default on MacOS
          ("s-m p" . magit-list-repositories)
          ("s-m m" . magit-status)
          ("s-m f" . magit-file-dispatch)
