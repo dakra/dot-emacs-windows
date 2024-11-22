@@ -447,7 +447,8 @@ NAME and ARGS are in `use-package'."
 (use-feature proced
   :bind ("C-x p" . proced)
   :config
-  (setq-default proced-filter 'all)
+  (add-to-list 'proced-filter-alist '(java (comm . "java")))
+  (setq-default proced-filter 'user-running)
   (setq proced-format 'medium)
   (setq proced-tree-flag t))
 
