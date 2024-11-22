@@ -143,15 +143,17 @@ NAME and ARGS are in `use-package'."
 (use-feature emacs
   :config
   ;; Compile loaded .elc files asynchronously
-  (setq native-comp-jit-compilation nil
-        native-comp-async-jobs-number 4)
+  (setq native-comp-jit-compilation t)
+  (if (eq system-type 'windows-nt)
+      (setq native-comp-async-jobs-number 4))
 
   ;; NOTE: To compile eln files you first have to byte-compile them with something like:
   ;; (byte-recompile-directory (expand-file-name "~/.emacs.d/elpa") 0)
 
   (add-to-list 'default-frame-alist '(font . "Fira Code-10:weight=regular:width=normal"))
   (set-frame-font "Fira Code-10:weight=regular:width=normal" nil t)
-  (set-fontset-font t 'emoji (font-spec :family "Segoe UI Emoji") nil 'append)
+  (unless (eq system-type 'darwin)
+    (set-fontset-font t 'emoji (font-spec :family "Segoe UI Emoji") nil 'append))
 
   ;; (require-theme 'modus-themes) ; `require-theme' is ONLY for the built-in Modus themes
 
@@ -323,6 +325,18 @@ NAME and ARGS are in `use-package'."
   (when (eq system-type 'windows-nt)
     (setq tramp-default-method "scpx")))
 
+(use-feature epa
+  :defer t
+  :config
+  ;; Always replace encrypted text with plain text version
+  (setq epa-replace-original-text t))
+
+(use-feature epg
+  :defer t
+  :config
+  ;; Let Emacs query the passphrase through the minibuffer
+  (setq epg-pinentry-mode 'loopback))
+
 ;; highlight the current line
 (use-feature hl-line
   :init
@@ -455,18 +469,18 @@ NAME and ARGS are in `use-package'."
   (defun project-edit-dir-locals ()
     "Open buffer with .dir-locals.el for current project."
     (interactive)
-    (->> (project-current)
-         (project-root)
-         (expand-file-name ".dir-locals.el")
-         (find-file)))
+    (thread-last (project-current)
+                 (project-root)
+                 (expand-file-name ".dir-locals.el")
+                 (find-file)))
 
   (defun project-edit-deps-edn ()
     "Open buffer with deps.edn for current project."
     (interactive)
-    (->> (project-current)
-         (project-root)
-         (expand-file-name "deps.edn")
-         (find-file)))
+    (thread-last (project-current)
+                 (project-root)
+                 (expand-file-name "deps.edn")
+                 (find-file)))
 
   (require 'python)
   (defun project-run-python ()
@@ -651,7 +665,7 @@ created a dedicated process for the project."
   :config
   ;; See https://github.com/eclipse-jdtls/eclipse.jdt.ls/blob/master/CHANGELOG.md
   ;; and download from https://download.eclipse.org/jdtls/milestones/
-  (setq lsp-java-jdt-download-url "https://www.eclipse.org/downloads/download.php?file=/jdtls/milestones/1.39.0/jdt-language-server-1.39.0-202408291433.tar.gz")
+  (setq lsp-java-jdt-download-url "https://www.eclipse.org/downloads/download.php?file=/jdtls/milestones/1.41.0/jdt-language-server-1.41.0-202410311350.tar.gz")
 
   (setq lsp-java-compile-null-analysis-mode "automatic")
 
@@ -1633,6 +1647,7 @@ mark the string and call `edit-indirect-region' with it."
   :config
   (setq gptel-default-mode 'org-mode
         gptel-model 'claude-3-5-sonnet-20241022
+        gptel-prompt-prefix-alist '((markdown-mode . "# ") (org-mode . "* ") (text-mode . "# "))
         gptel-backend (gptel-make-anthropic "Claude"
                         :stream t
                         :key gptel-api-key)))
@@ -1844,7 +1859,7 @@ mark the string and call `edit-indirect-region' with it."
   ;; By default prefer clojure-cli build-tool when jacking in
   (setq cider-preferred-build-tool 'clojure-cli)
   ;; and set the :dev and :licp alias
-  (setq cider-clojure-cli-aliases ":dev:licp")
+  (setq cider-clojure-cli-aliases ":dev")
 
   ;; Always reuse a dead REPS without prompt when it's the only option
   (setq cider-reuse-dead-repls 'auto)
