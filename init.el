@@ -525,13 +525,10 @@ created a dedicated process for the project."
            (aliases "yyyy-MM-dd'T'HH:mm:ss.SSS") (aliases "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
            (aliases "yyyy-MM-dd'T'HH:mm:ss.SSSSSS") (aliases "HH:mm:ss.SSS")
            (aliases "HH:mm:ss.SSSSSS"))))
-  (setq logview-additional-submodes
-        '(("Timbre"
-           (format  . "TIMESTAMP LEVEL [NAME] -")
-           (levels  . "SLF4J"))
-          ("Logback4me"
-           (format . "TIMESTAMP [THREAD] {} LEVEL NAME -")
-           (levels . "SLF4J")))))
+  (add-to-list 'logview-additional-submodes
+               '(("Timbre"
+                  (format  . "TIMESTAMP LEVEL [NAME] -")
+                  (levels  . "SLF4J")))))
 
 (use-feature eglot
   :defer t
@@ -624,9 +621,8 @@ created a dedicated process for the project."
         (lsp-find-references :display-action 'window)
       (lsp-find-references)))
 
-  ;; Don't watch `build' and `.gradle' directories for file changes
-  (add-to-list 'lsp-file-watch-ignored "[/\\\\]build$")
-  (add-to-list 'lsp-file-watch-ignored "[/\\\\]\\.gradle$")
+  ;; Don't watch `build' directory for file changes
+  (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]build\\'")
 
   ;; (require 'yasnippet)  ;; We use yasnippet for lsp snippet support
   (setq-default flycheck-disabled-checkers '(c/c++-clang c/c++-cppcheck c/c++-gcc)))
@@ -643,16 +639,16 @@ created a dedicated process for the project."
         (lsp-ui-doc-hide)
       (lsp-ui-doc-show)))
 
+  (setq lsp-ui-doc-include-signature t
+        lsp-ui-doc-position 'at-point)
+
   ;; Deactivate most of the annoying "fancy features"
-  (setq lsp-headerline-breadcrumb-enable nil)
-  (setq lsp-ui-doc-enable nil)
-  (setq lsp-ui-doc-use-childframe t)
-  (setq lsp-ui-doc-include-signature t)
-  (setq lsp-ui-doc-position 'at-point)
-  (setq lsp-lens-enable nil)  ;; "1 reference" etc at the end of the line
-  (setq lsp-ui-sideline-enable nil)
-  (setq lsp-ui-sideline-show-hover nil)
-  (setq lsp-ui-sideline-show-symbol nil))
+  (setq lsp-headerline-breadcrumb-enable nil
+        lsp-ui-doc-enable nil
+        lsp-lens-enable nil  ;; "1 reference" etc at the end of the line
+        lsp-ui-sideline-enable nil
+        lsp-ui-sideline-show-hover nil
+        lsp-ui-sideline-show-symbol nil))
 
 (use-package lsp-treemacs
   :after lsp-mode
@@ -663,18 +659,8 @@ created a dedicated process for the project."
 (use-package lsp-java
   :after lsp-mode
   :hook (((java-mode java-ts-mode conf-javaprop-mode) . lsp-java-boot-lens-mode))
-  :config
-  ;; See https://github.com/eclipse-jdtls/eclipse.jdt.ls/blob/master/CHANGELOG.md
-  ;; and download from https://download.eclipse.org/jdtls/milestones/
-  (setq lsp-java-jdt-download-url "https://www.eclipse.org/downloads/download.php?file=/jdtls/milestones/1.41.0/jdt-language-server-1.41.0-202410311350.tar.gz")
-
-  (setq lsp-java-compile-null-analysis-mode "automatic")
-
-  ;; Use Google style formatting by default
-  ;; (setq lsp-java-format-settings-url
-  ;;      "https://raw.githubusercontent.com/google/styleguide/gh-pages/eclipse-java-google-style.xml")
-  ;; (setq lsp-java-format-settings-profile "GoogleStyle")
-
+  :init
+  ;; Set java vmargs in init so we can use with-eval-after-load in personal.el to call `add-to-list'.
   (setq lsp-java-vmargs
         '("-noverify"
           "-XX:+UseParallelGC"
@@ -683,10 +669,22 @@ created a dedicated process for the project."
           "-XX:+UseStringDeduplication"
           "-Dsun.zip.disableMemoryMapping=true"
           "-Xmx4G"
-          "-Xms100m"))
+          "-Xms256m"))
+  :config
+  ;; Use Google style formatting by default
+  ;; (setq lsp-java-format-settings-url
+  ;;      "https://raw.githubusercontent.com/google/styleguide/gh-pages/eclipse-java-google-style.xml")
+  ;; (setq lsp-java-format-settings-profile "GoogleStyle")
 
-  ;; Use 3rd party decompiler
-  (setq lsp-java-content-provider-preferred "fernflower"))
+  ;; See https://github.com/eclipse-jdtls/eclipse.jdt.ls/blob/master/CHANGELOG.md
+  ;; and download from https://download.eclipse.org/jdtls/milestones/
+  (setq lsp-java-jdt-download-url "https://www.eclipse.org/downloads/download.php?file=/jdtls/milestones/1.41.0/jdt-language-server-1.41.0-202410311350.tar.gz")
+
+  (setq lsp-java-compile-null-analysis-mode "automatic"
+        lsp-java-format-on-type-enabled nil
+        lsp-java-completion-max-results 20
+        ;; Use 3rd party decompiler
+        lsp-java-content-provider-preferred "fernflower"))
 
 (use-feature dap-mode
   :after lsp-mode
@@ -699,6 +697,14 @@ created a dedicated process for the project."
               ([f11]   . dap-step-in)
               ([S-f11] . dap-step-out))
   :config
+  ;; I don't want the dap output in a dedicated side-window. I like a simple regular buffer!
+  (defun dap-go-to-output-buffer (&optional no-select)
+    "Go to output buffer."
+    (interactive)
+    (message "no side window")
+    (unless no-select
+      (select-window (dap--debug-session-output-buffer (dap--cur-session-or-die)))))
+
   (setq dap-auto-configure-features '(sessions locals breakpoints expressions repl tooltip))
   (dap-auto-configure-mode))
 
@@ -714,6 +720,11 @@ created a dedicated process for the project."
 
 (use-package shrink-whitespace
   :bind ("M-SPC" . shrink-whitespace))
+
+;; Automatically remove trailing whitespace (only if I put them there)
+(use-package ws-butler
+  :hook ((text-mode prog-mode) . ws-butler-mode)
+  :config (setq ws-butler-keep-whitespace-before-point nil))
 
 (use-package minions
   :unless noninteractive
@@ -739,7 +750,8 @@ created a dedicated process for the project."
   :after vertico
   :config
   (setq vertico-multiform-commands
-        '((consult-line buffer)
+        '((consult-xref buffer)
+          (consult-line buffer)
           (consult-buffer buffer)
           (consult-org-heading buffer)
           (consult-imenu buffer)
